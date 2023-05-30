@@ -9,11 +9,24 @@ import UIKit
 
 class ViewController: UIViewController {
 
+    @IBOutlet weak var plusBtn: UIButton!
+    
+    
+    @IBOutlet weak var tableView: UITableView!
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view.
+     
+        setupUI()
+        
     }
 
 
+    fileprivate func setupUI() {
+        plusBtn.clipsToBounds = true
+        plusBtn.layer.cornerRadius = 0.5 * plusBtn.bounds.size.width
+    }
+    
+    
 }
 
