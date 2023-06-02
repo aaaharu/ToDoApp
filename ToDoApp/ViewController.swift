@@ -9,6 +9,11 @@ import UIKit
 
 class ViewController: UIViewController{
     
+    // 섹션을 위해 데이터를 날짜 순으로 그룹화
+    var groupingToDoList: [String: [Post]] = [:]
+    var sectionDates: [String] = []
+   
+    
     // 검색 작업 아이템
     var searchDispatchWorkItem : DispatchWorkItem? = nil
     
@@ -16,17 +21,20 @@ class ViewController: UIViewController{
     
     
     @IBOutlet weak var searchBar: UISearchBar!
-    @IBOutlet weak var tableView: UITableView!
+    @IBOutlet weak var myTableView: UITableView!
     
     var toDoList: [Post] = []
+    
+    
+  
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        tableView.dataSource = self
+        myTableView.dataSource = self
         
         let nib = UINib(nibName: "ToDoCell", bundle: .main)
-        tableView.register(nib, forCellReuseIdentifier: "ToDoCell")
+        myTableView.register(nib, forCellReuseIdentifier: "ToDoCell")
         setupUI()
         toDoCall()
         
@@ -35,6 +43,8 @@ class ViewController: UIViewController{
         
         // 검색
         searchBar.searchTextField.addTarget(self, action: #selector(searchBarInput(_:)), for: .editingChanged)
+        
+        
     }
     
     // 한글 String을 URL로 변환(한글로 query 검색 시 에러 뜸)
@@ -111,7 +121,7 @@ class ViewController: UIViewController{
                 
                 
                 DispatchQueue.main.async {
-                    self.tableView.reloadData()
+                    self.myTableView.reloadData()
                 }
                 
                 
@@ -135,7 +145,7 @@ class ViewController: UIViewController{
         self.toDoList.removeAll()
         
         DispatchQueue.main.async {
-            self.tableView.reloadData()
+            self.myTableView.reloadData()
         }
         
         let urlString: String = "https://phplaravel-574671-2962113.cloudwaysapps.com/api/v1/todos/search?query=\(query)&order_by=desc&page=1&per_page=10"
@@ -164,7 +174,7 @@ class ViewController: UIViewController{
                 print(#fileID, #function, #line, "- \(self.toDoList.count)")
                 
                 DispatchQueue.main.async {
-                    self.tableView.reloadData()
+                    self.myTableView.reloadData()
                 }
                 
                 
@@ -208,10 +218,11 @@ class ViewController: UIViewController{
                 self.toDoList = todoResponse.data
                 
                 
+                self.makeSectionArray()
                 
                 
                 DispatchQueue.main.async {
-                    self.tableView.reloadData()
+                    self.myTableView.reloadData()
                 }
                 
                 
@@ -231,6 +242,22 @@ class ViewController: UIViewController{
         
     }
     
+    fileprivate func makeSectionArray(){
+        
+        //grouping : 값, 뒤에는 key
+        // 날짜 key, 그외 데이터 값
+        groupingToDoList = Dictionary(grouping: toDoList) { post in
+            guard let updated = post.upDated else { return "" }
+            return String(updated.prefix(10))
+        }
+        
+        // key순으로 정렬 -> 날짜(key) 섹션 추출 // 내림차순 정렬: sorted().reserved()
+        sectionDates = groupingToDoList.keys.sorted().reversed()
+        
+            print(#fileID, #function, #line, "- toDoList \(groupingToDoList)")
+        
+            print(#fileID, #function, #line, "- \(sectionDates)")
+    }
     
     
     
@@ -239,10 +266,15 @@ class ViewController: UIViewController{
 
 extension ViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return toDoList.count
+        let sectionString: String = sectionDates[section]
+        
+        // 섹션에 있는 날짜별로 키를 가져와서 값 반환?
+        return groupingToDoList[sectionString]?.count ?? 0
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        
+        
         if let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoCell", for: indexPath) as? ToDoCell {
             print(#fileID, #function, #line, "- <# 주석 #>")
             
@@ -255,11 +287,56 @@ extension ViewController: UITableViewDataSource {
             
             let cellData: Post = toDoList[indexPath.row]
             
-            if let title = cellData.title {
-                cell.label?.text = title
-            } else {
-                cell.label?.text = "제목 없음"
+            // 날짜 가져오기
+            let sectionString = sectionDates[indexPath.section]
+            // 날짜별로 데이터 가져오기
+            if let posts = groupingToDoList[sectionString] {
+                let post = posts[indexPath.row]
+                
+                // 제목 표시
+                if let title = post.title {
+                    cell.label?.text = title
+                } else {
+                    cell.label?.text = "제목 없음"
+                }
+                
+                // 날짜 표시
+                var time: String = ""
+                if var upDate = post.upDated {
+                  
+                    
+                        print(#fileID, #function, #line, "- \(upDate)")
+                    
+                    upDate.removeLast()
+                    
+                        print(#fileID, #function, #line, "- \(upDate)")
+                
+             
+                    let customDateFormatter = DateFormatter()
+                    customDateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS"
+                    
+                    
+                    if let date = customDateFormatter.date(from: upDate) {
+                            print(#fileID, #function, #line, "- \(date)")
+                            time = DateFormatter.localizedString(from: date ?? Date(), dateStyle: .long, timeStyle: .short)
+                    } else {
+                            print(#fileID, #function, #line, "- 날짜 변환 실패")
+                    }
+            
+                    
+                    cell.dateLabel?.text = time
+                    
+                } else {
+                    cell.dateLabel?.text = "시간 없음"
+                }
+            
             }
+            
+            
+            
+         
+            
+         
             
             return cell
         }
@@ -269,6 +346,21 @@ extension ViewController: UITableViewDataSource {
         
         
     }
+
+    // 섹션 수
+    func numberOfSections(in tableView: UITableView) -> Int {
+        return sectionDates.count
+    }
+        
+    
+    
+    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        // 날짜 표시
+        return sectionDates[section]
+    }
+
+     
+    
     
     
     

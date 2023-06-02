@@ -8,6 +8,9 @@
 import Foundation
 
 
+
+
+
 struct ToDoResponse: Decodable {
     let data: [Post]
 }
@@ -16,10 +19,12 @@ struct ToDoResponse: Decodable {
 struct Post: Decodable {
     let title: String?
     let isDone: Bool?
+    let upDated: String?
     
     enum CodingKeys: String, CodingKey {
         case title
         case isDone = "is_done"
+        case upDated = "updated_at"
     }
 //    let xml: XML?
 }
