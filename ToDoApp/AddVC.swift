@@ -69,7 +69,7 @@ class AddVC: UIViewController {
         
             }
     
-    fileprivate func callPost(_ AddToDo: String){
+    fileprivate func callPost(_ AddToDoTitle: String){
         print(#fileID, #function, #line, "-  주석 ")
         
         let urlString: String = "https://phplaravel-574671-2962113.cloudwaysapps.com/api/v1/todos"
@@ -80,7 +80,7 @@ class AddVC: UIViewController {
         
         // JSON 데이터
         let priJsonData: [String: Any] = [
-            "title" : "\(AddToDo)",
+            "title" : "\(AddToDoTitle)",
             
             // 완료 스위치를 누르면 false가 true로 바뀌는 토글 메서드 추가
             // 어떻게 넣지? 토글 기능으로

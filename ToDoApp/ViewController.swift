@@ -5,6 +5,7 @@
 //  Created by 김은지 on 2023/05/30.
 //
 
+import SwipeCellKit
 import UIKit
 
 class ViewController: UIViewController{
@@ -12,7 +13,7 @@ class ViewController: UIViewController{
     // 섹션을 위해 데이터를 날짜 순으로 그룹화
     var groupingToDoList: [String: [Post]] = [:]
     var sectionDates: [String] = []
-   
+    
     
     // 검색 작업 아이템
     var searchDispatchWorkItem : DispatchWorkItem? = nil
@@ -27,19 +28,20 @@ class ViewController: UIViewController{
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-      
+        
         
         myTableView.reloadData()
         
-       
+        
     }
-  
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         myTableView.dataSource = self
         myTableView.delegate = self
+    
         
         let nib = UINib(nibName: "ToDoCell", bundle: .main)
         myTableView.register(nib, forCellReuseIdentifier: "ToDoCell")
@@ -60,14 +62,14 @@ class ViewController: UIViewController{
     // 한글 String을 URL로 변환(한글로 query 검색 시 에러 뜸)
     func encodeKoreanToURL(_ KoreanString: String) -> String {
         
-    
+        
         let encodedString = KoreanString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
         
         return encodedString
     }
     
     @objc fileprivate func searchBarInput(_ searchTextField: UITextField) {
-            print(#fileID, #function, #line, "- <# 주석 #>")
+        print(#fileID, #function, #line, "- <# 주석 #>")
         
         let urlQuery: String? = encodeKoreanToURL(searchTextField.text ?? "")
         
@@ -162,11 +164,11 @@ class ViewController: UIViewController{
         
         guard let url = URL(string: urlString) else { return     print(#fileID, #function, #line, "- Url 오류! ")}
         
-            print(#fileID, #function, #line, "- \(url)")
+        print(#fileID, #function, #line, "- \(url)")
         
         let urlReuqest = URLRequest(url: url)
         URLSession.shared.dataTask(with: urlReuqest) { data, response, error in
-                print(#fileID, #function, #line, "- <# 주석 #>")
+            print(#fileID, #function, #line, "- <# 주석 #>")
             
             guard let data = data else { return }
             //
@@ -178,7 +180,7 @@ class ViewController: UIViewController{
                 let todoResponse: ToDoResponse = try JSONDecoder().decode(ToDoResponse.self, from: data)
                 print(#fileID, #function, #line, "포스트\(todoResponse) ")
                 
-            
+                
                 self.toDoList = todoResponse.data
                 
                 print(#fileID, #function, #line, "- \(self.toDoList.count)")
@@ -201,6 +203,44 @@ class ViewController: UIViewController{
             
         }.resume()
         
+        
+    }
+    
+    fileprivate func deleteMethod(_ deleteID: Int) {
+        print(#fileID, #function, #line, "-  주석 ")
+        
+        let urlString: String = "https://phplaravel-574671-2962113.cloudwaysapps.com/api/v1/todos/\(deleteID)"
+        
+            print(#fileID, #function, #line, "- \(urlString)")
+        guard let url = URL(string: urlString) else { return }
+        
+        var urlReuqest = URLRequest(url: url)
+        
+        // httpMethod 기본 GET -> DELETE로 수정
+        urlReuqest.httpMethod = "DELETE"
+        
+        URLSession.shared.dataTask(with: urlReuqest) { data, response, error in
+            
+            
+            guard let data = data else { return }
+            //
+            //            if let jsonString = String(data: data, encoding: .utf8) {
+            //                    print(#fileID, #function, #line, "- \(jsonString)")
+            //            }
+            do {
+                
+                let todoResponse: ToDoResponse = try JSONDecoder().decode(ToDoResponse.self, from: data)
+                print(#fileID, #function, #line, "포스트\(todoResponse) ")
+            
+                
+                
+            } catch {
+                print(#fileID, #function, #line, "- \(error)")
+            }
+            
+            
+            
+        }.resume()
         
     }
     
@@ -267,9 +307,9 @@ class ViewController: UIViewController{
         // key순으로 정렬 -> 날짜(key) 섹션 추출 // 내림차순 정렬: sorted().reserved()
         sectionDates = groupingToDoList.keys.sorted().reversed()
         
-            print(#fileID, #function, #line, "- toDoList \(groupingToDoList)")
+        print(#fileID, #function, #line, "- toDoList \(groupingToDoList)")
         
-            print(#fileID, #function, #line, "- \(sectionDates)")
+        print(#fileID, #function, #line, "- \(sectionDates)")
     }
     
     
@@ -277,7 +317,42 @@ class ViewController: UIViewController{
 }
 
 
-extension ViewController: UITableViewDataSource {
+extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate{
+ 
+    // 오른쪽 셀 스와이프 - 삭제
+    func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath, for orientation: SwipeActionsOrientation) -> [SwipeAction]? {
+        guard orientation == .right else { return nil }
+        
+        let deleteAction = SwipeAction(style: .destructive, title: "Delete") { action, indexPath in
+            
+            if let deleteID = self.toDoList[indexPath.row].id {
+                
+                print(#fileID, #function, #line, "- \(self.toDoList.self)")
+                print(#fileID, #function, #line, "- \(deleteID)")
+                
+                
+                self.deleteMethod(deleteID)
+                
+                self.toDoList.remove(at: indexPath.row)
+                
+                print(#fileID, #function, #line, "- \(self.toDoList.self)")
+                
+                
+                self.reCallGetTodo()
+                
+        
+                
+            }
+            
+            
+        }
+        
+        
+        // customize the action appearance
+        deleteAction.image = UIImage(named: "delete")
+        
+        return [deleteAction]
+    }
     
     // 섹션 폰트
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
@@ -287,7 +362,7 @@ extension ViewController: UITableViewDataSource {
         
         let sectionLabel = UILabel(frame: CGRect(x: 10, y: 0, width: tableView.bounds.size.width, height: tableView.bounds.size.height))
         sectionLabel.font = UIFont(name: "Helvetica-Bold", size: 30)
-
+        
         
         sectionLabel.textColor = .black
         sectionLabel.text = sectionDates[section]
@@ -295,7 +370,7 @@ extension ViewController: UITableViewDataSource {
         
         headerView.addSubview(sectionLabel)
         
-     return headerView
+        return headerView
         
     }
     
@@ -309,7 +384,7 @@ extension ViewController: UITableViewDataSource {
         // 섹션에 있는 날짜별로 행 반환
         return groupingToDoList[sectionString]?.count ?? 0
     }
-
+    
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
@@ -317,24 +392,25 @@ extension ViewController: UITableViewDataSource {
         if let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoCell", for: indexPath) as? ToDoCell {
             print(#fileID, #function, #line, "- <# 주석 #>")
             
-//
-//            if cell.label != nil {
-//                print(#fileID, #function, #line, "- 레이블이 연결되었습니다.")
-//            } else {
-//                print(#fileID, #function, #line, "- 레이블이 연결되지 않았습니다!")
-//            }
+            cell.delegate = self
+            //
+            //            if cell.label != nil {
+            //                print(#fileID, #function, #line, "- 레이블이 연결되었습니다.")
+            //            } else {
+            //                print(#fileID, #function, #line, "- 레이블이 연결되지 않았습니다!")
+            //            }
             
-//            let cellData: Post = toDoList[indexPath.row]
+            //            let cellData: Post = toDoList[indexPath.row]
             
             // 날짜 가져오기
             let sectionString = sectionDates[indexPath.section]
             // 날짜별로 데이터 가져오기
             // posts 데이터 접근
             if let posts = groupingToDoList[sectionString] {
-                    print(#fileID, #function, #line, "- \(posts)")
+                print(#fileID, #function, #line, "- \(posts)")
                 // post 특정 행에 접근
                 let post = posts[indexPath.row]
-                    print(#fileID, #function, #line, "- \(post)")
+                print(#fileID, #function, #line, "- \(post)")
                 // 제목 표시
                 if let title = post.title {
                     cell.label?.text = title
@@ -345,40 +421,40 @@ extension ViewController: UITableViewDataSource {
                 // 날짜 표시
                 var time: String = ""
                 if var upDate = post.upDated {
-                  
                     
-                        print(#fileID, #function, #line, "- \(upDate)")
+                    
+                    print(#fileID, #function, #line, "- \(upDate)")
                     
                     upDate.removeLast()
                     
-                        print(#fileID, #function, #line, "- \(upDate)")
-                
-             
+                    print(#fileID, #function, #line, "- \(upDate)")
+                    
+                    
                     let customDateFormatter = DateFormatter()
                     customDateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS"
                     
                     
                     if let date = customDateFormatter.date(from: upDate) {
-                            print(#fileID, #function, #line, "- \(date)")
-                            time = DateFormatter.localizedString(from: date ?? Date(), dateStyle: .long, timeStyle: .short)
+                        print(#fileID, #function, #line, "- \(date)")
+                        time = DateFormatter.localizedString(from: date ?? Date(), dateStyle: .long, timeStyle: .short)
                     } else {
-                            print(#fileID, #function, #line, "- 날짜 변환 실패")
+                        print(#fileID, #function, #line, "- 날짜 변환 실패")
                     }
-            
+                    
                     
                     cell.dateLabel?.text = time
                     
                 } else {
                     cell.dateLabel?.text = "시간 없음"
                 }
-            
+                
             }
             
             
             
-         
             
-         
+            
+            
             
             return cell
         }
@@ -388,12 +464,12 @@ extension ViewController: UITableViewDataSource {
         
         
     }
-
+    
     // 섹션 수
     func numberOfSections(in tableView: UITableView) -> Int {
         return sectionDates.count
     }
-        
+    
     
     
     func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
@@ -409,7 +485,7 @@ extension ViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
         return UITableView.automaticDimension
     }
- 
+    
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         UITableView.automaticDimension
     }
@@ -419,3 +495,5 @@ extension ViewController: UITableViewDelegate {
         self.myTableView.estimatedSectionHeaderHeight = 50
     }
 }
+
+

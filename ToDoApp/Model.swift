@@ -17,11 +17,13 @@ struct ToDoResponse: Decodable {
 
 // MARK: - Post
 struct Post: Decodable {
+    let id: Int?
     let title: String?
     let isDone: Bool?
     let upDated: String?
     
     enum CodingKeys: String, CodingKey {
+        case id
         case title
         case isDone = "is_done"
         case upDated = "updated_at"
