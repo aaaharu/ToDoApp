@@ -111,8 +111,11 @@
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" on="YES" translatesAutoresizingMaskIntoConstraints="NO" id="mgj-au-gkA">
+                            <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="mgj-au-gkA">
                                 <rect key="frame" x="314" y="429.33333333333331" width="51" height="31"/>
+                                <connections>
+                                    <action selector="boolSwitchClicked:" destination="HBy-y9-BG2" eventType="valueChanged" id="bhm-Va-0Oy"/>
+                                </connections>
                             </switch>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="uKn-gy-an9">
                                 <rect key="frame" x="40" y="496.33333333333326" width="323" height="52"/>
@@ -163,6 +166,7 @@
                     <simulatedToolbarMetrics key="simulatedBottomBarMetrics"/>
                     <connections>
                         <outlet property="backBtn" destination="WtY-ul-T0G" id="rV2-VM-YUM"/>
+                        <outlet property="boolSwitch" destination="mgj-au-gkA" id="gJa-Ga-Ime"/>
                         <outlet property="finishBtn" destination="uKn-gy-an9" id="U2S-3x-Jhc"/>
                         <outlet property="toDoTF" destination="Mzm-PS-BZ3" id="sKL-Ca-B5h"/>
                     </connections>

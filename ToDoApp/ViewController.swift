@@ -286,7 +286,9 @@ extension ViewController: UITableViewDataSource {
         headerView.backgroundColor = .white
         
         let sectionLabel = UILabel(frame: CGRect(x: 10, y: 0, width: tableView.bounds.size.width, height: tableView.bounds.size.height))
-        sectionLabel.font = UIFont(name: "Helvetica", size: 30)
+        sectionLabel.font = UIFont(name: "Helvetica-Bold", size: 30)
+
+        
         sectionLabel.textColor = .black
         sectionLabel.text = sectionDates[section]
         sectionLabel.sizeToFit()

@@ -10,10 +10,12 @@ import UIKit
 
 class AddVC: UIViewController {
     
+    var finishBool: Bool = false
+    
     @IBOutlet weak var backBtn: UIBarButtonItem!
     @IBOutlet weak var toDoTF: UITextField!
     @IBOutlet weak var finishBtn: UIButton!
-    
+    @IBOutlet weak var boolSwitch: UISwitch!
     
     
     override func viewDidLoad() {
@@ -60,6 +62,12 @@ class AddVC: UIViewController {
     }
     
     
+    @IBAction func boolSwitchClicked(_ sender: UISwitch) {
+        
+        finishBool.toggle()
+            print(#fileID, #function, #line, "- finishBool: \(finishBool)")
+        
+            }
     
     fileprivate func callPost(_ AddToDo: String){
         print(#fileID, #function, #line, "-  주석 ")
@@ -73,7 +81,10 @@ class AddVC: UIViewController {
         // JSON 데이터
         let priJsonData: [String: Any] = [
             "title" : "\(AddToDo)",
-            "is_done" : false
+            
+            // 완료 스위치를 누르면 false가 true로 바뀌는 토글 메서드 추가
+            // 어떻게 넣지? 토글 기능으로
+            "is_done" : finishBool
         ]
         
         // JSON 데이터로 직렬화하는 기능 - JSONSerialization
