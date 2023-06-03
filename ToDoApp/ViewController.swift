@@ -25,21 +25,31 @@ class ViewController: UIViewController{
     
     var toDoList: [Post] = []
     
-    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+      
+        
+        myTableView.reloadData()
+        
+       
+    }
   
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         myTableView.dataSource = self
+        myTableView.delegate = self
         
         let nib = UINib(nibName: "ToDoCell", bundle: .main)
         myTableView.register(nib, forCellReuseIdentifier: "ToDoCell")
         setupUI()
-        toDoCall()
+        getToDoMethod()
+        sectionHeight()
+        
         
         // 노티 - 수신기 등록
-        NotificationCenter.default.addObserver(self, selector: #selector(toDoRecall), name: Notification.Name("CustomNotification"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(reCallGetTodo), name: Notification.Name("CustomNotification"), object: nil)
         
         // 검색
         searchBar.searchTextField.addTarget(self, action: #selector(searchBarInput(_:)), for: .editingChanged)
@@ -93,7 +103,7 @@ class ViewController: UIViewController{
         
     }
     
-    @objc fileprivate func toDoRecall() {
+    @objc fileprivate func reCallGetTodo() {
         print(#fileID, #function, #line, "-  주석 ")
         
         let urlString: String = "https://phplaravel-574671-2962113.cloudwaysapps.com/api/v1/todos?page=1&order_by=desc&per_page=10"
@@ -117,8 +127,8 @@ class ViewController: UIViewController{
                 
                 self.toDoList = todoResponse.data
                 
-                
-                
+                // 섹션으로 정리한 배열 메서드 불러오기
+                self.makeSection()
                 
                 DispatchQueue.main.async {
                     self.myTableView.reloadData()
@@ -173,6 +183,8 @@ class ViewController: UIViewController{
                 
                 print(#fileID, #function, #line, "- \(self.toDoList.count)")
                 
+                self.makeSection()
+                
                 DispatchQueue.main.async {
                     self.myTableView.reloadData()
                 }
@@ -193,7 +205,7 @@ class ViewController: UIViewController{
     }
     
     
-    fileprivate func toDoCall() {
+    fileprivate func getToDoMethod() {
         print(#fileID, #function, #line, "-  주석 ")
         
         let urlString: String = "https://phplaravel-574671-2962113.cloudwaysapps.com/api/v1/todos?page=1&order_by=desc&per_page=10"
@@ -218,7 +230,7 @@ class ViewController: UIViewController{
                 self.toDoList = todoResponse.data
                 
                 
-                self.makeSectionArray()
+                self.makeSection()
                 
                 
                 DispatchQueue.main.async {
@@ -242,12 +254,13 @@ class ViewController: UIViewController{
         
     }
     
-    fileprivate func makeSectionArray(){
+    fileprivate func makeSection(){
         
-        //grouping : 값, 뒤에는 key
+        //grouping : value 값, 뒤에는 key
         // 날짜 key, 그외 데이터 값
         groupingToDoList = Dictionary(grouping: toDoList) { post in
             guard let updated = post.upDated else { return "" }
+            // subscript -> String (날짜)
             return String(updated.prefix(10))
         }
         
@@ -265,12 +278,36 @@ class ViewController: UIViewController{
 
 
 extension ViewController: UITableViewDataSource {
+    
+    // 섹션 폰트
+    func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        
+        let headerView = UIView()
+        headerView.backgroundColor = .white
+        
+        let sectionLabel = UILabel(frame: CGRect(x: 10, y: 0, width: tableView.bounds.size.width, height: tableView.bounds.size.height))
+        sectionLabel.font = UIFont(name: "Helvetica", size: 30)
+        sectionLabel.textColor = .black
+        sectionLabel.text = sectionDates[section]
+        sectionLabel.sizeToFit()
+        
+        headerView.addSubview(sectionLabel)
+        
+     return headerView
+        
+    }
+    
+    func tableView(_ tableView: UITableView, estimatedHeightForHeaderInSection section: Int) -> CGFloat {
+        return 50
+    }
+    
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         let sectionString: String = sectionDates[section]
         
-        // 섹션에 있는 날짜별로 키를 가져와서 값 반환?
+        // 섹션에 있는 날짜별로 행 반환
         return groupingToDoList[sectionString]?.count ?? 0
     }
+
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
@@ -285,14 +322,17 @@ extension ViewController: UITableViewDataSource {
 //                print(#fileID, #function, #line, "- 레이블이 연결되지 않았습니다!")
 //            }
             
-            let cellData: Post = toDoList[indexPath.row]
+//            let cellData: Post = toDoList[indexPath.row]
             
             // 날짜 가져오기
             let sectionString = sectionDates[indexPath.section]
             // 날짜별로 데이터 가져오기
+            // posts 데이터 접근
             if let posts = groupingToDoList[sectionString] {
+                    print(#fileID, #function, #line, "- \(posts)")
+                // post 특정 행에 접근
                 let post = posts[indexPath.row]
-                
+                    print(#fileID, #function, #line, "- \(post)")
                 // 제목 표시
                 if let title = post.title {
                     cell.label?.text = title
@@ -358,14 +398,22 @@ extension ViewController: UITableViewDataSource {
         // 날짜 표시
         return sectionDates[section]
     }
-
-     
-    
-    
-    
-    
-    
     
     
 }
 
+
+extension ViewController: UITableViewDelegate {
+    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+        return UITableView.automaticDimension
+    }
+ 
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        UITableView.automaticDimension
+    }
+    
+    fileprivate func sectionHeight() {
+        self.myTableView.sectionHeaderHeight = UITableView.automaticDimension
+        self.myTableView.estimatedSectionHeaderHeight = 50
+    }
+}
