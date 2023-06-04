@@ -1,64 +1,48 @@
 //
-//  AddVC.swift
+//  PutVC.swift
 //  ToDoApp
 //
-//  Created by 김은지 on 2023/05/30.
+//  Created by 김은지 on 2023/06/04.
 //
 
-import Foundation
 import UIKit
+import Foundation
 
-class AddVC: UIViewController {
+class PutVC: UIViewController {
+    
+    var id: Int = 0
     
     var finishBool: Bool = false
     
-    @IBOutlet weak var backBtn: UIBarButtonItem!
-    @IBOutlet weak var toDoTF: UITextField!
-    @IBOutlet weak var finishBtn: UIButton!
-    @IBOutlet weak var boolSwitch: UISwitch!
-    
+    @IBOutlet var toDoTF: UITextField!
+    @IBOutlet var boolSwitch: UISwitch!
+    @IBOutlet var backBtn: UIBarButtonItem!
+    @IBOutlet var finishBtn: UIButton!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        setupUI()
-        
-        
-        
-    }
-    
-    @IBAction func backBtnClicked(_ sender: UIBarButtonItem) {
-        
-      
+            print(#fileID, #function, #line, "- id받았다 \(id)")
         
     }
     
     
     
-    fileprivate func setupUI() {
-        
-        finishBtn.clipsToBounds = true
-        finishBtn.layer.cornerRadius = 17
-        
-    }
-    
-    @IBAction func finishBtnCLicked(_ sender: UIButton) {
-        
+    @IBAction func finishBtnClickd(_ sender: UIButton){
         guard let text = toDoTF.text, !text.isEmpty else { return }
         
         guard text.count > 0 else { return }
         
-        callPost(text)
+        callPutMethod(text)
         
         //노티 등록
         
-        NotificationCenter.default.post(name: Notification.Name("CustomNotification"), object: nil)
+        NotificationCenter.default.post(name: Notification.Name("PutNotification"), object: nil)
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             self.navigationController?.popViewController(animated: true)
            }
            
-        
     }
     
     
@@ -67,12 +51,16 @@ class AddVC: UIViewController {
         finishBool.toggle()
             print(#fileID, #function, #line, "- finishBool: \(finishBool)")
         
-            }
+    }
     
-    fileprivate func callPost(_ addToDoTitle: String){
+    
+    
+    
+    
+    fileprivate func callPutMethod(_ putToDoTitle: String){
         print(#fileID, #function, #line, "-  주석 ")
         
-        let urlString: String = "https://phplaravel-574671-2962113.cloudwaysapps.com/api/v1/todos"
+        let urlString: String = "https://phplaravel-574671-2962113.cloudwaysapps.com/api/v1/todos/\(id)"
         
         guard let url = URL(string: urlString) else { return }
         
@@ -80,7 +68,7 @@ class AddVC: UIViewController {
         
         // JSON 데이터
         let priJsonData: [String: Any] = [
-            "title" : "\(addToDoTitle)",
+            "title" : "\(putToDoTitle)",
             
             // 완료 스위치를 누르면 false가 true로 바뀌는 토글 메서드 추가
             // 어떻게 넣지? 토글 기능으로
@@ -122,6 +110,8 @@ class AddVC: UIViewController {
         
         
     }
+    
+    
+    
+    
 }
-
-

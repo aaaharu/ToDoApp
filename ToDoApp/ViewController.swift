@@ -10,6 +10,8 @@ import UIKit
 
 class ViewController: UIViewController{
     
+    var id: Int = 0
+    
     // 섹션을 위해 데이터를 날짜 순으로 그룹화
     var groupingToDoList: [String: [Post]] = [:]
     var sectionDates: [String] = []
@@ -43,7 +45,7 @@ class ViewController: UIViewController{
         hiddenFinishBtn.titleLabel?.text = "완료 숨기기"
         myTableView.dataSource = self
         myTableView.delegate = self
-    
+        
         
         let nib = UINib(nibName: "ToDoCell", bundle: .main)
         myTableView.register(nib, forCellReuseIdentifier: "ToDoCell")
@@ -59,6 +61,16 @@ class ViewController: UIViewController{
         searchBar.searchTextField.addTarget(self, action: #selector(searchBarInput(_:)), for: .editingChanged)
         
         
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+            print(#fileID, #function, #line, "- <# 주석 #>")
+        if segue.identifier == "NavtoPutVC" {
+            let putVC = segue.destination as! PutVC
+            
+            putVC.id = self.id
+            
+        }
     }
     
     // 한글 String을 URL로 변환(한글로 query 검색 시 에러 뜸)
@@ -213,7 +225,7 @@ class ViewController: UIViewController{
         
         let urlString: String = "https://phplaravel-574671-2962113.cloudwaysapps.com/api/v1/todos/\(deleteID)"
         
-            print(#fileID, #function, #line, "- \(urlString)")
+        print(#fileID, #function, #line, "- \(urlString)")
         guard let url = URL(string: urlString) else { return }
         
         var urlReuqest = URLRequest(url: url)
@@ -233,7 +245,7 @@ class ViewController: UIViewController{
                 
                 let todoResponse: ToDoResponse = try JSONDecoder().decode(ToDoResponse.self, from: data)
                 print(#fileID, #function, #line, "포스트\(todoResponse) ")
-            
+                
                 
                 
             } catch {
@@ -326,7 +338,7 @@ class ViewController: UIViewController{
         if titleString == "완료 숨기기" {
             // isDone == true이면 숨기기
             // false만 데이터 배열에 다시 넣기, 섹션으로 묶기, 테이블뷰 다시 불러오기
-            toDoList = toDoList.filter { !$0.isDone! }
+            toDoList = toDoList.filter { !($0.isDone ?? false) }
             makeSection()
             myTableView.reloadData()
             sender.setTitle("전체보기", for: .normal)
@@ -338,7 +350,7 @@ class ViewController: UIViewController{
             sender.setTitle("완료 숨기기", for: .normal)
         }
         
-    
+        
         
         
         
@@ -358,8 +370,11 @@ class ViewController: UIViewController{
 
 
 
-extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate{
- 
+extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, SendIdProtocol{
+   
+    
+  
+    
     // 오른쪽 셀 스와이프 - 삭제
     func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath, for orientation: SwipeActionsOrientation) -> [SwipeAction]? {
         guard orientation == .right else { return nil }
@@ -381,7 +396,7 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate{
                 
                 self.reCallGetTodo()
                 
-        
+                
                 
             }
             
@@ -430,11 +445,10 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate{
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
         
+        
         if let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoCell", for: indexPath) as? ToDoCell {
             print(#fileID, #function, #line, "- <# 주석 #>")
             
-            cell.delegate = self
-            //
             //            if cell.label != nil {
             //                print(#fileID, #function, #line, "- 레이블이 연결되었습니다.")
             //            } else {
@@ -442,6 +456,8 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate{
             //            }
             
             //            let cellData: Post = toDoList[indexPath.row]
+            
+            cell.delegate = self
             
             // 날짜 가져오기
             let sectionString = sectionDates[indexPath.section]
@@ -452,11 +468,6 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate{
                 // post 특정 행에 접근
                 let post = posts[indexPath.row]
                 print(#fileID, #function, #line, "- \(post)")
-                
-//                    // Hidden-finishBtn Clicked //
-//                if post.isDone == true {
-//                    groupingToDoList.remove(at: <#T##Dictionary<String, [Post]>.Index#>)
-//                }
                 
                 // 제목 표시
                 if let title = post.title {
@@ -498,19 +509,42 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate{
             }
             
             
-            
-            
-            
-            
-            
             return cell
         }
         
         return UITableViewCell()
         
         
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        
+            print(#fileID, #function, #line, "- <# 주석 #>")
+        
+        // checkBtn 클릭 -> 수정 api & PutVC 호출
+        sendID()
+        
+        performSegue(withIdentifier: "NavtoPutVC", sender: self)
+        
+        
+        func sendID() {
+            
+            let sectionStirng = sectionDates[indexPath.section]
+            let postsInSection = groupingToDoList[sectionStirng]
+            let selectData = postsInSection?[indexPath.row]
+            
+            
+            
+            id = selectData?.id ?? 0
+            
+            
+            
+            
+        }
         
     }
+    
+ 
     
     // 섹션 수
     func numberOfSections(in tableView: UITableView) -> Int {
@@ -542,5 +576,6 @@ extension ViewController: UITableViewDelegate {
         self.myTableView.estimatedSectionHeaderHeight = 50
     }
 }
+
 
 

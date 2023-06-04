@@ -15,6 +15,7 @@
 		D32FDB1E2A260EB7004EA633 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D32FDB1C2A260EB7004EA633 /* LaunchScreen.storyboard */; };
 		D32FDB262A260F4F004EA633 /* ToDoCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = D32FDB252A260F4F004EA633 /* ToDoCell.xib */; };
 		D32FDB282A261225004EA633 /* ToDoCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = D32FDB272A261225004EA633 /* ToDoCell.swift */; };
+		D35B29842A2CC63A006FE399 /* PutVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = D35B29832A2CC63A006FE399 /* PutVC.swift */; };
 		D39E6DC72A2B7D0400D84DA2 /* SwipeCellKit in Frameworks */ = {isa = PBXBuildFile; productRef = D39E6DC62A2B7D0400D84DA2 /* SwipeCellKit */; };
 		D3A1DBE92A26194E00A0AC94 /* AddVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3A1DBE82A26194E00A0AC94 /* AddVC.swift */; };
 		D3BE190E2A262C0D00D16234 /* Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3BE190D2A262C0D00D16234 /* Model.swift */; };
@@ -31,6 +32,7 @@
 		D32FDB1F2A260EB7004EA633 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D32FDB252A260F4F004EA633 /* ToDoCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ToDoCell.xib; sourceTree = "<group>"; };
 		D32FDB272A261225004EA633 /* ToDoCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToDoCell.swift; sourceTree = "<group>"; };
+		D35B29832A2CC63A006FE399 /* PutVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PutVC.swift; sourceTree = "<group>"; };
 		D3A1DBE82A26194E00A0AC94 /* AddVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddVC.swift; sourceTree = "<group>"; };
 		D3BE190D2A262C0D00D16234 /* Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Model.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -71,6 +73,7 @@
 				D32FDB152A260EB6004EA633 /* ViewController.swift */,
 				D3BE190D2A262C0D00D16234 /* Model.swift */,
 				D3A1DBE82A26194E00A0AC94 /* AddVC.swift */,
+				D35B29832A2CC63A006FE399 /* PutVC.swift */,
 				D32FDB252A260F4F004EA633 /* ToDoCell.xib */,
 				D32FDB272A261225004EA633 /* ToDoCell.swift */,
 				D32FDB172A260EB6004EA633 /* Main.storyboard */,
@@ -163,6 +166,7 @@
 				D32FDB122A260EB6004EA633 /* AppDelegate.swift in Sources */,
 				D32FDB142A260EB6004EA633 /* SceneDelegate.swift in Sources */,
 				D3BE190E2A262C0D00D16234 /* Model.swift in Sources */,
+				D35B29842A2CC63A006FE399 /* PutVC.swift in Sources */,
 				D32FDB282A261225004EA633 /* ToDoCell.swift in Sources */,
 				D3A1DBE92A26194E00A0AC94 /* AddVC.swift in Sources */,
 			);
