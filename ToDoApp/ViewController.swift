@@ -20,6 +20,7 @@ class ViewController: UIViewController{
     
     @IBOutlet weak var plusBtn: UIButton!
     
+    @IBOutlet weak var hiddenFinishBtn: UIButton!
     
     @IBOutlet weak var searchBar: UISearchBar!
     @IBOutlet weak var myTableView: UITableView!
@@ -39,6 +40,7 @@ class ViewController: UIViewController{
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        hiddenFinishBtn.titleLabel?.text = "완료 숨기기"
         myTableView.dataSource = self
         myTableView.delegate = self
     
@@ -313,8 +315,47 @@ class ViewController: UIViewController{
     }
     
     
+    @IBAction func hiddenFinishBtnClicked(_ sender: UIButton) {
+        print(#fileID, #function, #line, "- \(String(describing: sender.titleLabel?.text))")
+        
+        // 완료 숨기기 <-> 전체보기
+        guard let titleString = sender.titleLabel?.text else { return }
+        
+        print(#fileID, #function, #line, "- \(titleString)")
+        
+        if titleString == "완료 숨기기" {
+            // isDone == true이면 숨기기
+            // false만 데이터 배열에 다시 넣기, 섹션으로 묶기, 테이블뷰 다시 불러오기
+            toDoList = toDoList.filter { !$0.isDone! }
+            makeSection()
+            myTableView.reloadData()
+            sender.setTitle("전체보기", for: .normal)
+        } else {
+            // isDone == true 숨기기 취소
+            // 데이터 배열 다시 로드(get호출), 섹션으로 묶기
+            getToDoMethod()
+            makeSection()
+            sender.setTitle("완료 숨기기", for: .normal)
+        }
+        
+    
+        
+        
+        
+        
+        
+    }
     
 }
+
+
+
+
+
+
+
+
+
 
 
 extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate{
@@ -411,6 +452,12 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate{
                 // post 특정 행에 접근
                 let post = posts[indexPath.row]
                 print(#fileID, #function, #line, "- \(post)")
+                
+//                    // Hidden-finishBtn Clicked //
+//                if post.isDone == true {
+//                    groupingToDoList.remove(at: <#T##Dictionary<String, [Post]>.Index#>)
+//                }
+                
                 // 제목 표시
                 if let title = post.title {
                     cell.label?.text = title

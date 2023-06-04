@@ -27,8 +27,17 @@
                                             <outlet property="delegate" destination="BYZ-38-t0r" id="Jvk-sB-CeQ"/>
                                         </connections>
                                     </searchBar>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" id="Sc2-vC-846">
+                                        <rect key="frame" x="0.0" y="56" width="393" height="34.333333333333343"/>
+                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                        <state key="normal" title="Button"/>
+                                        <buttonConfiguration key="configuration" style="plain" title="완료 숨기기"/>
+                                        <connections>
+                                            <action selector="hiddenFinishBtnClicked:" destination="BYZ-38-t0r" eventType="touchUpInside" id="2vT-Oh-xhn"/>
+                                        </connections>
+                                    </button>
                                     <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" estimatedSectionHeaderHeight="-1" sectionFooterHeight="28" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="OIy-KD-96o">
-                                        <rect key="frame" x="0.0" y="56" width="393" height="559"/>
+                                        <rect key="frame" x="0.0" y="90.333333333333314" width="393" height="524.66666666666674"/>
                                         <color key="separatorColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                     </tableView>
                                 </subviews>
@@ -58,6 +67,7 @@
                     </view>
                     <navigationItem key="navigationItem" id="Qyh-fj-mEg"/>
                     <connections>
+                        <outlet property="hiddenFinishBtn" destination="Sc2-vC-846" id="RKo-Qz-gqy"/>
                         <outlet property="myTableView" destination="OIy-KD-96o" id="vPQ-02-buz"/>
                         <outlet property="plusBtn" destination="16q-Bb-YdF" id="0dX-La-TUj"/>
                         <outlet property="searchBar" destination="yQ4-vT-psU" id="Icl-om-N6v"/>
