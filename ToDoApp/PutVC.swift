@@ -22,34 +22,33 @@ class PutVC: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-            print(#fileID, #function, #line, "- id받았다 \(id)")
+        print(#fileID, #function, #line, "- id받았다 \(id)")
         
     }
     
     
     
     @IBAction func finishBtnClickd(_ sender: UIButton){
-        guard let text = toDoTF.text, !text.isEmpty else { return }
+        guard let text = toDoTF.text, !text.isEmpty || finishBtn.isHighlighted else { return }
         
-        guard text.count > 0 else { return }
+        print(#fileID, #function, #line, "- 피니시 버튼 테스트")
         
-        callPutMethod(text)
-        
-        //노티 등록
-        
+    
+            self.callPutMethod(text)
+                
+      
         NotificationCenter.default.post(name: Notification.Name("PutNotification"), object: nil)
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            self.navigationController?.popViewController(animated: true)
-           }
-           
-    }
+              performSegue(withIdentifier: "BackToVC", sender: self)
+        }
     
+
+
     
     @IBAction fileprivate func boolSwitchClicked(_ sender: UISwitch) {
         
         finishBool.toggle()
-            print(#fileID, #function, #line, "- finishBool: \(finishBool)")
+        print(#fileID, #function, #line, "- finishBool: \(finishBool)")
         
     }
     
@@ -63,6 +62,7 @@ class PutVC: UIViewController {
         let urlString: String = "https://phplaravel-574671-2962113.cloudwaysapps.com/api/v1/todos/\(id)"
         
         guard let url = URL(string: urlString) else { return }
+        
         
         
         
@@ -80,7 +80,7 @@ class PutVC: UIViewController {
         
         // HTTP 요청
         var urlReuqest = URLRequest(url: url)
-        urlReuqest.httpMethod = "POST"
+        urlReuqest.httpMethod = "PUT"
         urlReuqest.setValue("application/json", forHTTPHeaderField: "Content-Type")
         urlReuqest.httpBody = jsonData
         
@@ -89,18 +89,17 @@ class PutVC: UIViewController {
         let task = URLSession.shared.dataTask(with: urlReuqest) { data, response, error in
             
             if let error = error {
-                print(#fileID, #function, #line, "- 할일 목록 추가 실패 \(error.localizedDescription)")
+                print(#fileID, #function, #line, "- 할일 목록 수정 실패 \(error.localizedDescription)")
                 return
             }
             
             guard let httpResponse = response as? HTTPURLResponse,
-                  httpResponse.statusCode == 200 else {     print(#fileID, #function, #line, "- 할일 목록 추가 실패(응답)")
+                  httpResponse.statusCode == 200 else {
+                print(#fileID, #function, #line, "- 할일 목록 수정 실패(응답)")
                 return
             }
             
-            print(#fileID, #function, #line, "- 할 일 목록 추가 성공(응답)")
-        
-            
+            print(#fileID, #function, #line, "- 할 일 목록 수정 성공(응답)")
             
         }
         
@@ -115,3 +114,4 @@ class PutVC: UIViewController {
     
     
 }
+

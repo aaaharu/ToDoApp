@@ -10,6 +10,8 @@ import UIKit
 
 class ViewController: UIViewController{
     
+    
+    
     var id: Int = 0
     
     // 섹션을 위해 데이터를 날짜 순으로 그룹화
@@ -57,15 +59,29 @@ class ViewController: UIViewController{
         // 노티 - 수신기 등록
         NotificationCenter.default.addObserver(self, selector: #selector(reCallGetTodo), name: Notification.Name("CustomNotification"), object: nil)
         
+
+//        NotificationCenter.default.addObserver(self, selector: #selector(putCallGetTodo), name: Notification.Name("PutNotification"), object: nil)
+        
+        
         // 검색
         searchBar.searchTextField.addTarget(self, action: #selector(searchBarInput(_:)), for: .editingChanged)
         
         
     }
     
+    @IBAction func backToVC(unwindSegue: UIStoryboardSegue) {
+            getToDoMethod()
+        }
+    
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-            print(#fileID, #function, #line, "- <# 주석 #>")
+        print(#fileID, #function, #line, "- <# 주석 #>")
+        
+        print(#fileID, #function, #line, "- 아이디 보낸다 받아라")
+        
+        
         if segue.identifier == "NavtoPutVC" {
+            
+            
             let putVC = segue.destination as! PutVC
             
             putVC.id = self.id
@@ -119,7 +135,7 @@ class ViewController: UIViewController{
         
     }
     
-    @objc fileprivate func reCallGetTodo() {
+    @objc func reCallGetTodo() {
         print(#fileID, #function, #line, "-  주석 ")
         
         let urlString: String = "https://phplaravel-574671-2962113.cloudwaysapps.com/api/v1/todos?page=1&order_by=desc&per_page=10"
@@ -135,18 +151,22 @@ class ViewController: UIViewController{
             //            if let jsonString = String(data: data, encoding: .utf8) {
             //                    print(#fileID, #function, #line, "- \(jsonString)")
             //            }
+            
+            
+            
             do {
                 
                 let todoResponse: ToDoResponse = try JSONDecoder().decode(ToDoResponse.self, from: data)
                 print(#fileID, #function, #line, "포스트\(todoResponse) ")
-                
                 
                 self.toDoList = todoResponse.data
                 
                 // 섹션으로 정리한 배열 메서드 불러오기
                 self.makeSection()
                 
+                
                 DispatchQueue.main.async {
+                 
                     self.myTableView.reloadData()
                 }
                 
@@ -156,9 +176,67 @@ class ViewController: UIViewController{
             }
             
             
+            guard let httpResponse = response as? HTTPURLResponse,
+                  httpResponse.statusCode == 200 else {
+                print(#fileID, #function, #line, "- 할일 목록 가져오기 실패(응답)")
+                return
+            }
+            
+            print(#fileID, #function, #line, "- 할 일 목록 가져오기 성공(응답)")
+            
+        }.resume()
+        
+        
+    }
+    
+    @objc func putCallGetTodo() {
+        print(#fileID, #function, #line, "-  주석 ")
+        
+        let urlString: String = "https://phplaravel-574671-2962113.cloudwaysapps.com/api/v1/todos?page=1&order_by=desc&per_page=10"
+        
+        guard let url = URL(string: urlString) else { return }
+        
+        let urlReuqest = URLRequest(url: url)
+        URLSession.shared.dataTask(with: urlReuqest) { data, response, error in
+            
+            
+            guard let data = data else { return }
+            //
+            //            if let jsonString = String(data: data, encoding: .utf8) {
+            //                    print(#fileID, #function, #line, "- \(jsonString)")
+            //            }
             
             
             
+            do {
+                
+                let todoResponse: ToDoResponse = try JSONDecoder().decode(ToDoResponse.self, from: data)
+                print(#fileID, #function, #line, "포스트\(todoResponse) ")
+                
+                self.toDoList = todoResponse.data
+                
+                // 섹션으로 정리한 배열 메서드 불러오기
+                self.makeSection()
+                
+                
+                DispatchQueue.main.async {
+                 
+                    self.myTableView.reloadData()
+                }
+                
+                
+            } catch {
+                print(#fileID, #function, #line, "- \(error)")
+            }
+            
+            
+            guard let httpResponse = response as? HTTPURLResponse,
+                  httpResponse.statusCode == 200 else {
+                print(#fileID, #function, #line, "- 할일 목록 가져오기 실패(응답)")
+                return
+            }
+            
+            print(#fileID, #function, #line, "- 할 일 목록 가져오기 성공(응답)")
             
         }.resume()
         
@@ -371,44 +449,87 @@ class ViewController: UIViewController{
 
 
 extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, SendIdProtocol{
-   
     
-  
+    
+    
     
     // 오른쪽 셀 스와이프 - 삭제
     func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath, for orientation: SwipeActionsOrientation) -> [SwipeAction]? {
-        guard orientation == .right else { return nil }
         
-        let deleteAction = SwipeAction(style: .destructive, title: "Delete") { action, indexPath in
+        
+        
+        
+        if orientation == .right {
             
-            if let deleteID = self.toDoList[indexPath.row].id {
+            let deleteAction = SwipeAction(style: .destructive, title: "삭제") { action, indexPath in
                 
-                print(#fileID, #function, #line, "- \(self.toDoList.self)")
-                print(#fileID, #function, #line, "- \(deleteID)")
+                if let deleteID = self.toDoList[indexPath.row].id {
+                    
+                    print(#fileID, #function, #line, "- \(self.toDoList.self)")
+                    print(#fileID, #function, #line, "- \(deleteID)")
+                    
+                    
+                    self.deleteMethod(deleteID)
+                    
+                    self.toDoList.remove(at: indexPath.row)
+                    
+                    print(#fileID, #function, #line, "- \(self.toDoList.self)")
+                    
+                    
+                    self.reCallGetTodo()
+                    
+                }
+            }
+            
+            return [deleteAction]
+            
+        } else if orientation == .left  {
+            
+            
+            
+            let editAction = SwipeAction(style: .destructive, title: "수정") {
+                action, indexPath in
                 
                 
-                self.deleteMethod(deleteID)
-                
-                self.toDoList.remove(at: indexPath.row)
-                
-                print(#fileID, #function, #line, "- \(self.toDoList.self)")
+                // checkBtn 클릭 -> 수정 api & PutVC 호출
+                sendID()
                 
                 
-                self.reCallGetTodo()
+                func sendID() {
+                    
+                    let sectionStirng = self.sectionDates[indexPath.section]
+                    let postsInSection = self.groupingToDoList[sectionStirng]
+                    let selectData = postsInSection?[indexPath.row]
+                    
+                    
+                    
+                    self.id = selectData?.id ?? 0
+                    
+                    
+                    
+                    
+                }
+                
+                
+                self.performSegue(withIdentifier: "NavtoPutVC", sender: self)
                 
                 
                 
             }
             
+            editAction.backgroundColor = .systemGreen
+            
+            return [editAction]
             
         }
         
+        return nil
         
-        // customize the action appearance
-        deleteAction.image = UIImage(named: "delete")
-        
-        return [deleteAction]
     }
+    
+    
+    
+    
     
     // 섹션 폰트
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
@@ -517,34 +638,8 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, Sen
         
     }
     
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        
-            print(#fileID, #function, #line, "- <# 주석 #>")
-        
-        // checkBtn 클릭 -> 수정 api & PutVC 호출
-        sendID()
-        
-        performSegue(withIdentifier: "NavtoPutVC", sender: self)
-        
-        
-        func sendID() {
-            
-            let sectionStirng = sectionDates[indexPath.section]
-            let postsInSection = groupingToDoList[sectionStirng]
-            let selectData = postsInSection?[indexPath.row]
-            
-            
-            
-            id = selectData?.id ?? 0
-            
-            
-            
-            
-        }
-        
-    }
     
- 
+    
     
     // 섹션 수
     func numberOfSections(in tableView: UITableView) -> Int {
