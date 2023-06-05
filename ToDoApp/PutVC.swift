@@ -11,10 +11,13 @@ import Foundation
 class PutVC: UIViewController {
     
     var id: Int = 0
+    var toDoTitle: String = ""
+    var finishBool: Bool?
+    var getBool: Bool?
     
-    var finishBool: Bool = false
     
-    var dataToSend: (id: Int, text: String?, boolValue: Bool)? = nil
+    
+    var dataToSend: (id: Int, text: String?, boolValue: Bool?)? = nil
     
     
     @IBOutlet var toDoTF: UITextField!
@@ -27,13 +30,17 @@ class PutVC: UIViewController {
         
         print(#fileID, #function, #line, "- id받았다 \(id)")
        
+        makeUI()
         
     }
         
-    
-    
-    
-    
+    fileprivate func makeUI() {
+        toDoTF.text = toDoTitle
+        if let getBool = getBool {
+            boolSwitch.isOn = getBool
+        }
+    }
+
     @IBAction func finishBtnClickd(_ sender: UIButton){
         guard let text = toDoTF.text, !text.isEmpty || finishBtn.isHighlighted else { return }
         
@@ -49,7 +56,7 @@ class PutVC: UIViewController {
         
             performSegue(withIdentifier: "BackToVC", sender: dataToSend)
             
-            print(#fileID, #function, #line, "- 보낼 데이터\(dataToSend)")
+        print(#fileID, #function, #line, "- 보낼 데이터\(String(describing: dataToSend))")
           
     }
 
@@ -57,8 +64,8 @@ class PutVC: UIViewController {
     
     @IBAction fileprivate func boolSwitchClicked(_ sender: UISwitch) {
         
-        finishBool.toggle()
-        print(#fileID, #function, #line, "- finishBool: \(finishBool)")
+        getBool?.toggle()
+        print(#fileID, #function, #line, "- finishBool: 완료 상태 \(String(describing: getBool))")
         
     }
     
@@ -82,7 +89,7 @@ class PutVC: UIViewController {
             
             // 완료 스위치를 누르면 false가 true로 바뀌는 토글 메서드 추가
             // 어떻게 넣지? 토글 기능으로
-            "is_done" : finishBool
+            "is_done" : getBool as Any
         ]
         
         // JSON 데이터로 직렬화하는 기능 - JSONSerialization

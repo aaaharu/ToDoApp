@@ -8,13 +8,24 @@
 import SwipeCellKit
 import UIKit
 
-class ViewController: UIViewController{
+class ViewController: UIViewController, ClickedCheckBtn{
     
-    var boolValue: Bool = false
+
+  
     
     var receiveData: (id: Int, text: String, boolValue: Bool)?
     
+    // MARK: - 데이터 담아서 putVC에 보내주기
+    // 아이디, title, finish
     var id: Int = 0
+    var toDotitle: String = ""
+    var toDoFinish: Bool = false
+    
+    // 선택한 cell의 bool값을 담는 데이터
+    var selectDataIsChanged: Bool =  false
+    var testIsDone: Bool = false
+    
+    var tableReferenceIsDone: Bool = false
     
     // 섹션을 위해 데이터를 날짜 순으로 그룹화
     var groupingToDoList: [String: [Post]] = [:]
@@ -57,30 +68,125 @@ class ViewController: UIViewController{
         getToDoMethod()
         sectionHeight()
         
-        
-        // 노티 - 수신기 등록
+        // 노티 - (발신:addVC) 할일 목록 추가시 reCallGetMethod 수신기 등록
         NotificationCenter.default.addObserver(self, selector: #selector(reCallGetTodo), name: Notification.Name("CustomNotification"), object: nil)
-        
-        
-        
         
         // 검색
         searchBar.searchTextField.addTarget(self, action: #selector(searchBarInput(_:)), for: .editingChanged)
         
-        // PutVC 받은 데이터
+        // PutVC 수정한 데이터 가져오기
+        putDataToSend()
+        
+    }
+    
+    
+    
+    
+        func selectDataChanging(_ nowIsDone: inout Bool) -> Bool {
+    
+            print(#fileID, #function, #line, "- \(String(describing: nowIsDone))")
+            
+            nowIsDone.toggle()
+            print(#fileID, #function, #line, "- 함수 값 1차 변경\(String(describing: nowIsDone))")
+            
+            let changeBool = nowIsDone
+            print(#fileID, #function, #line, "- 함수 변경된 값 반영\(String(describing: changeBool))")
+            
+            return changeBool
+    
+        }
+    
+    
+    func clickedChangeDone(cell: ToDoCell) {
+        print(#fileID, #function, #line, "- 값이 원래 \(String(describing: testIsDone))")
+        
+        // 값이 안 바뀜.. 옵셔널에서 옵셔널 바인딩 시도
+        // 값 변경
+    
+        DispatchQueue.main.async {
+            self.testIsDone = self.selectDataIsChanged
+            print(#fileID, #function, #line, "- 값이 1차 바뀜! 할당되는 영역 \(String(describing: self.testIsDone))")
+            self.testIsDone = self.selectDataChanging(&self.testIsDone)
+            print(#fileID, #function, #line, "- 값이 2차 바뀜! 함수로 값이 반전\(String(describing: self.testIsDone))")
+        }
+        
+
+        print(#fileID, #function, #line, "- 값이 3차. 2차 값 그대로 \(String(describing: testIsDone))")
+        
+        putDataToSend()
+      
+    }
+    
+    // MARK: - 데이터
+    
+    // 데이터 섹션별로 정렬
+    fileprivate func makeSection(){
+        
+        //grouping : value 값, 뒤에는 key
+        // 날짜 key, 그외 데이터 값
+        groupingToDoList = Dictionary(grouping: toDoList) { post in
+            guard let updated = post.upDated else { return "" }
+            // subscript -> String (날짜)
+            return String(updated.prefix(10))
+        }
+        
+        // key순으로 정렬 -> 날짜(key) 섹션 추출 // 내림차순 정렬: sorted().reserved()
+        sectionDates = groupingToDoList.keys.sorted().reversed()
+        
+        print(#fileID, #function, #line, "- toDoList \(groupingToDoList)")
+        
+        print(#fileID, #function, #line, "- \(sectionDates)")
+    }
+    
+    
+    // PutVC 수정한 데이터 가져오기
+    fileprivate func putDataToSend() {
+        
         if let text = receiveData?.text,
            let boolValue = receiveData?.boolValue,
            let id = receiveData?.id
         {
             print(#fileID, #function, #line, "- text \(text), boolValue \(boolValue), id\(id)")
             
-            self.boolValue = boolValue
+            self.testIsDone = boolValue
             
         }
+    }
+    // MARK: - UI 관련
+    
+    fileprivate func setupUI() {
+        plusBtn.clipsToBounds = true
+        plusBtn.layer.cornerRadius = 0.5 * plusBtn.bounds.size.width
         
     }
     
     
+    @IBAction func hiddenFinishBtnClicked(_ sender: UIButton) {
+        print(#fileID, #function, #line, "- \(String(describing: sender.titleLabel?.text))")
+        
+        // 완료 숨기기 <-> 전체보기
+        guard let titleString = sender.titleLabel?.text else { return }
+        
+        print(#fileID, #function, #line, "- \(titleString)")
+        
+        if titleString == "완료 숨기기" {
+            // isDone == true이면 숨기기
+            // false만 데이터 배열에 다시 넣기, 섹션으로 묶기, 테이블뷰 다시 불러오기
+            toDoList = toDoList.filter { !($0.isDone ?? false) }
+            makeSection()
+            myTableView.reloadData()
+            sender.setTitle("전체보기", for: .normal)
+        } else {
+            // isDone == true 숨기기 취소
+            // 데이터 배열 다시 로드(get호출), 섹션으로 묶기
+            getToDoMethod()
+            makeSection()
+            sender.setTitle("완료 숨기기", for: .normal)
+        }
+        
+    }
+    
+    // MARK: - unwindSegue
     
     @IBAction func backToVC(unwindSegue: UIStoryboardSegue) {
         print(#fileID, #function, #line, "- unwind")
@@ -89,15 +195,14 @@ class ViewController: UIViewController{
         if let sourceVC = unwindSegue.source as? PutVC, let data = sourceVC.dataToSend as? (id: Int, text: String, boolValue: Bool) {
             receiveData = data
             
-            print(#fileID, #function, #line, "- \(receiveData)")
+            print(#fileID, #function, #line, "- \(String(describing: receiveData))")
         }
-        
         
         callPutMethod(receiveData?.text ?? "")
         
     }
     
-    
+    // MARK: -  PutVC로 데이터 보내기
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         print(#fileID, #function, #line, "- <# 주석 #>")
         
@@ -109,10 +214,15 @@ class ViewController: UIViewController{
             let putVC = segue.destination as! PutVC
             
             putVC.id = self.id
-            
+            putVC.toDoTitle = self.toDotitle
+            putVC.getBool = self.toDoFinish
+            putVC.finishBool = self.testIsDone
         }
     }
     
+    
+    // MARK: - API
+
     // 한글 String을 URL로 변환(한글로 query 검색 시 에러 뜸)
     func encodeKoreanToURL(_ KoreanString: String) -> String {
         
@@ -152,13 +262,7 @@ class ViewController: UIViewController{
         
     }
     
-    
-    fileprivate func setupUI() {
-        plusBtn.clipsToBounds = true
-        plusBtn.layer.cornerRadius = 0.5 * plusBtn.bounds.size.width
-        
-    }
-    
+
     @objc func reCallGetTodo() {
         print(#fileID, #function, #line, "-  주석 ")
         
@@ -258,11 +362,7 @@ class ViewController: UIViewController{
             } catch {
                 print(#fileID, #function, #line, "- \(error)")
             }
-            
-            
-            
-            
-            
+
             
         }.resume()
         
@@ -332,7 +432,6 @@ class ViewController: UIViewController{
                 
                 self.toDoList = todoResponse.data
                 
-                
                 self.makeSection()
                 
                 
@@ -344,12 +443,7 @@ class ViewController: UIViewController{
             } catch {
                 print(#fileID, #function, #line, "- \(error)")
             }
-            
-            
-            
-            
-            
-            
+
         }.resume()
         
         
@@ -373,7 +467,7 @@ class ViewController: UIViewController{
             
             // 완료 스위치를 누르면 false가 true로 바뀌는 토글 메서드 추가
             // 어떻게 넣지? 토글 기능으로
-            "is_done" : boolValue as Any
+            "is_done" : testIsDone as Any
         ]
         
         // JSON 데이터로 직렬화하는 기능 - JSONSerialization
@@ -393,7 +487,7 @@ class ViewController: UIViewController{
                 print(#fileID, #function, #line, "- 할일 목록 수정 실패 \(error.localizedDescription)")
                 return
             }
-            guard let data = data else { return     print(#fileID, #function, #line, "- 할 일 목록 수정 실패: 데이터가 없음")}
+            guard data != nil else { return     print(#fileID, #function, #line, "- 할 일 목록 수정 실패: 데이터가 없음")}
             //
             //            if let jsonString = String(data: data, encoding: .utf8) {
             //                    print(#fileID, #function, #line, "- \(jsonString)")
@@ -433,85 +527,23 @@ class ViewController: UIViewController{
         }
         
         task.resume()
-        
-        
-        
+
         
     }
     
-    
-    fileprivate func makeSection(){
-        
-        //grouping : value 값, 뒤에는 key
-        // 날짜 key, 그외 데이터 값
-        groupingToDoList = Dictionary(grouping: toDoList) { post in
-            guard let updated = post.upDated else { return "" }
-            // subscript -> String (날짜)
-            return String(updated.prefix(10))
-        }
-        
-        // key순으로 정렬 -> 날짜(key) 섹션 추출 // 내림차순 정렬: sorted().reserved()
-        sectionDates = groupingToDoList.keys.sorted().reversed()
-        
-        print(#fileID, #function, #line, "- toDoList \(groupingToDoList)")
-        
-        print(#fileID, #function, #line, "- \(sectionDates)")
-    }
-    
-    
-    @IBAction func hiddenFinishBtnClicked(_ sender: UIButton) {
-        print(#fileID, #function, #line, "- \(String(describing: sender.titleLabel?.text))")
-        
-        // 완료 숨기기 <-> 전체보기
-        guard let titleString = sender.titleLabel?.text else { return }
-        
-        print(#fileID, #function, #line, "- \(titleString)")
-        
-        if titleString == "완료 숨기기" {
-            // isDone == true이면 숨기기
-            // false만 데이터 배열에 다시 넣기, 섹션으로 묶기, 테이블뷰 다시 불러오기
-            toDoList = toDoList.filter { !($0.isDone ?? false) }
-            makeSection()
-            myTableView.reloadData()
-            sender.setTitle("전체보기", for: .normal)
-        } else {
-            // isDone == true 숨기기 취소
-            // 데이터 배열 다시 로드(get호출), 섹션으로 묶기
-            getToDoMethod()
-            makeSection()
-            sender.setTitle("완료 숨기기", for: .normal)
-        }
-        
-        
-        
-        
-        
-        
-        
-    }
+
     
 }
 
 
-
-
-
-
-
-
-
-
+// MARK: - TableView 그리기
 
 extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, SendIdProtocol{
     
-    
-    
-    
+
     // 오른쪽 셀 스와이프 - 삭제
     func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath, for orientation: SwipeActionsOrientation) -> [SwipeAction]? {
-        
-        
-        
+
         
         if orientation == .right {
             
@@ -556,11 +588,12 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, Sen
                     let selectData = postsInSection?[indexPath.row]
                     
                     
-                    
+                    // 아이디 값 넣어주기
                     self.id = selectData?.id ?? 0
-                    self.boolValue = ((selectData?.isDone) != nil)
-                    
-                    
+                    self.testIsDone = ((selectData?.isDone) != nil)
+                    self.toDotitle = selectData?.title ?? ""
+                    self.toDoFinish = ((selectData?.isDone) != nil)
+
                     
                 }
                 
@@ -576,14 +609,12 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, Sen
             return [editAction]
             
         }
-        
+
         return nil
         
     }
     
-    
-    
-    
+
     
     // 섹션 폰트
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
@@ -633,7 +664,7 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, Sen
             //            let cellData: Post = toDoList[indexPath.row]
             
             cell.delegate = self
-            
+            cell.clickedCheckDelegate = self
             
             // 날짜 가져오기
             let sectionString = sectionDates[indexPath.section]
@@ -645,8 +676,7 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, Sen
                 let post = posts[indexPath.row]
                 print(#fileID, #function, #line, "- \(post)")
                 
-                
-                
+                selectDataIsChanged = post.isDone ?? false
                 
                 
                 // 제목 표시
@@ -656,21 +686,6 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, Sen
                     cell.label?.text = "제목 없음"
                 }
                 
-                // 셀 체크버튼 클릭
-                let selectData = post
-                if selectData.isDone == true {
-                    cell.checkBtn.configuration?.baseForegroundColor = .black
-                    // 취소선
-                    let strikeThroughTask = NSMutableAttributedString(string: selectData.title!)
-                    strikeThroughTask.addAttributes([
-                        NSAttributedString.Key.strikethroughStyle: NSUnderlineStyle.single.rawValue,
-                        NSAttributedString.Key.strikethroughColor: UIColor.darkGray,
-                        NSAttributedString.Key.font : UIFont.systemFont(ofSize: 17.0)
-                    ], range: NSMakeRange(0, strikeThroughTask.length))
-                    cell.label?.attributedText = strikeThroughTask
-                } else {
-                    cell.checkBtn.configuration?.baseForegroundColor = .lightGray
-                }
                 
                 
                 // 날짜 표시
@@ -714,16 +729,13 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, Sen
         
     }
     
-    
-    
-    
+
     // 섹션 수
     func numberOfSections(in tableView: UITableView) -> Int {
         return sectionDates.count
     }
     
-    
-    
+
     func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         // 날짜 표시
         return sectionDates[section]
@@ -742,7 +754,50 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, Sen
         
         cell.indexPath = indexPath
         
+        
+        // 날짜 가져오기
+        let sectionString = sectionDates[indexPath.section]
+        // 날짜별로 데이터 가져오기
+        // posts 데이터 접근
+        if let posts = groupingToDoList[sectionString] {
+            print(#fileID, #function, #line, "- \(posts)")
+            // post 특정 행에 접근
+            let post = posts[indexPath.row]
+            print(#fileID, #function, #line, "- \(post)")
+            // 셀 체크버튼 클릭
+            let selectData = post
+            
+            // 체인지된 피니쉬 상태를 담고 싶다.
+            // isDone이 false면 true로 true면 false로
+            
+            
+            
+            if tableReferenceIsDone {
+                cell.checkBtn.configuration?.baseForegroundColor = .black
+                // 취소선
+                let strikeThroughTask = NSMutableAttributedString(string: selectData.title!)
+                strikeThroughTask.addAttributes([
+                    NSAttributedString.Key.strikethroughStyle: NSUnderlineStyle.single.rawValue,
+                    NSAttributedString.Key.strikethroughColor: UIColor.darkGray,
+                    NSAttributedString.Key.font : UIFont.systemFont(ofSize: 17.0)
+                ], range: NSMakeRange(0, strikeThroughTask.length))
+                cell.label?.attributedText = strikeThroughTask
+            } else {
+                myTableView.reloadData()
+                cell.checkBtn.configuration?.baseForegroundColor = .lightGray
+                let originalString = selectData.title ?? ""
+                let attributedString = NSMutableAttributedString(string: originalString)
+                attributedString.removeAttribute(NSAttributedString.Key.strikethroughStyle, range: NSMakeRange(0, attributedString.length))
+                attributedString.removeAttribute(NSAttributedString.Key.strikethroughColor, range: NSMakeRange(0, attributedString.length))
+                attributedString.addAttribute(NSAttributedString.Key.font, value: UIFont.systemFont(ofSize: 17.0), range: NSMakeRange(0, attributedString.length))
+                cell.label?.attributedText = attributedString
+            }
+
+            
+        }
+        
     }
+    
 }
 
 extension ViewController: UITableViewDelegate {
@@ -759,6 +814,3 @@ extension ViewController: UITableViewDelegate {
         self.myTableView.estimatedSectionHeaderHeight = 50
     }
 }
-
-
-

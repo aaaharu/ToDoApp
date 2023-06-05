@@ -19,7 +19,7 @@ struct ToDoResponse: Decodable {
 struct Post: Decodable {
     let id: Int?
     let title: String?
-    let isDone: Bool?
+    var isDone: Bool?
     let upDated: String?
     
     enum CodingKeys: String, CodingKey {
