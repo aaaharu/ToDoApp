@@ -14,6 +14,9 @@ class PutVC: UIViewController {
     
     var finishBool: Bool = false
     
+    var dataToSend: (id: Int, text: String?, boolValue: Bool)? = nil
+    
+    
     @IBOutlet var toDoTF: UITextField!
     @IBOutlet var boolSwitch: UISwitch!
     @IBOutlet var backBtn: UIBarButtonItem!
@@ -23,8 +26,11 @@ class PutVC: UIViewController {
         super.viewDidLoad()
         
         print(#fileID, #function, #line, "- id받았다 \(id)")
+       
         
     }
+        
+    
     
     
     
@@ -33,15 +39,19 @@ class PutVC: UIViewController {
         
         print(#fileID, #function, #line, "- 피니시 버튼 테스트")
         
-    
-            self.callPutMethod(text)
-                
-      
-        NotificationCenter.default.post(name: Notification.Name("PutNotification"), object: nil)
         
-              performSegue(withIdentifier: "BackToVC", sender: self)
-        }
-    
+        
+        // 보낼 데이터
+        
+//    dataToSend: (id: Int, text: String?, boolValue: Bool)?
+        
+        dataToSend = (id: id, text: toDoTF.text, boolValue: finishBool)
+        
+            performSegue(withIdentifier: "BackToVC", sender: dataToSend)
+            
+            print(#fileID, #function, #line, "- 보낼 데이터\(dataToSend)")
+          
+    }
 
 
     

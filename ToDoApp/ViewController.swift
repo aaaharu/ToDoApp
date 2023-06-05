@@ -10,7 +10,9 @@ import UIKit
 
 class ViewController: UIViewController{
     
+    var boolValue: Bool = false
     
+    var receiveData: (id: Int, text: String, boolValue: Bool)?
     
     var id: Int = 0
     
@@ -66,12 +68,36 @@ class ViewController: UIViewController{
         // 검색
         searchBar.searchTextField.addTarget(self, action: #selector(searchBarInput(_:)), for: .editingChanged)
         
+        // PutVC 받은 데이터
+        if var text = receiveData?.text,
+           var boolValue = receiveData?.boolValue,
+           var id = receiveData?.id
+            {
+            print(#fileID, #function, #line, "- text \(text), boolValue \(boolValue), id\(id)")
+            
+            self.boolValue = boolValue
+            
+        }
         
     }
     
+    
+    
     @IBAction func backToVC(unwindSegue: UIStoryboardSegue) {
-            getToDoMethod()
+            print(#fileID, #function, #line, "- unwind")
+        
+        
+        if let sourceVC = unwindSegue.source as? PutVC, let data = sourceVC.dataToSend as? (id: Int, text: String, boolValue: Bool) {
+            receiveData = data
+            
+            print(#fileID, #function, #line, "- \(receiveData)")
         }
+        
+        
+        callPutMethod(receiveData?.text ?? "")
+        
+        }
+    
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         print(#fileID, #function, #line, "- <# 주석 #>")
@@ -80,8 +106,7 @@ class ViewController: UIViewController{
         
         
         if segue.identifier == "NavtoPutVC" {
-            
-            
+
             let putVC = segue.destination as! PutVC
             
             putVC.id = self.id
@@ -189,60 +214,7 @@ class ViewController: UIViewController{
         
     }
     
-    @objc func putCallGetTodo() {
-        print(#fileID, #function, #line, "-  주석 ")
-        
-        let urlString: String = "https://phplaravel-574671-2962113.cloudwaysapps.com/api/v1/todos?page=1&order_by=desc&per_page=10"
-        
-        guard let url = URL(string: urlString) else { return }
-        
-        let urlReuqest = URLRequest(url: url)
-        URLSession.shared.dataTask(with: urlReuqest) { data, response, error in
-            
-            
-            guard let data = data else { return }
-            //
-            //            if let jsonString = String(data: data, encoding: .utf8) {
-            //                    print(#fileID, #function, #line, "- \(jsonString)")
-            //            }
-            
-            
-            
-            do {
-                
-                let todoResponse: ToDoResponse = try JSONDecoder().decode(ToDoResponse.self, from: data)
-                print(#fileID, #function, #line, "포스트\(todoResponse) ")
-                
-                self.toDoList = todoResponse.data
-                
-                // 섹션으로 정리한 배열 메서드 불러오기
-                self.makeSection()
-                
-                
-                DispatchQueue.main.async {
-                 
-                    self.myTableView.reloadData()
-                }
-                
-                
-            } catch {
-                print(#fileID, #function, #line, "- \(error)")
-            }
-            
-            
-            guard let httpResponse = response as? HTTPURLResponse,
-                  httpResponse.statusCode == 200 else {
-                print(#fileID, #function, #line, "- 할일 목록 가져오기 실패(응답)")
-                return
-            }
-            
-            print(#fileID, #function, #line, "- 할 일 목록 가져오기 성공(응답)")
-            
-        }.resume()
-        
-        
-    }
-    
+   
     @objc fileprivate func callSearchGET(_ query: String) {
         print(#fileID, #function, #line, "-  주석 ")
         
@@ -386,6 +358,87 @@ class ViewController: UIViewController{
         
     }
     
+    fileprivate func callPutMethod(_ putToDoTitle: String){
+        print(#fileID, #function, #line, "-  \(id) ")
+        
+        let urlString: String = "https://phplaravel-574671-2962113.cloudwaysapps.com/api/v1/todos/\(id)"
+        
+        guard let url = URL(string: urlString) else { return }
+        
+            print(#fileID, #function, #line, "- url\(url)")
+        
+        
+        // JSON 데이터
+        let priJsonData: [String: Any] = [
+            "title" : "\(putToDoTitle)",
+            
+            // 완료 스위치를 누르면 false가 true로 바뀌는 토글 메서드 추가
+            // 어떻게 넣지? 토글 기능으로
+            "is_done" : boolValue as Any
+        ]
+         
+        // JSON 데이터로 직렬화하는 기능 - JSONSerialization
+        let jsonData = try? JSONSerialization.data(withJSONObject: priJsonData)
+        
+        // HTTP 요청
+        var urlReuqest = URLRequest(url: url)
+        urlReuqest.httpMethod = "PUT"
+        urlReuqest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        urlReuqest.httpBody = jsonData
+        
+        
+        // 요청 보내기 - URLSession
+        let task = URLSession.shared.dataTask(with: urlReuqest) { data, response, error in
+            
+            if let error = error {
+                print(#fileID, #function, #line, "- 할일 목록 수정 실패 \(error.localizedDescription)")
+                return
+            }
+            guard let data = data else { return     print(#fileID, #function, #line, "- 할 일 목록 수정 실패: 데이터가 없음")}
+            //
+            //            if let jsonString = String(data: data, encoding: .utf8) {
+            //                    print(#fileID, #function, #line, "- \(jsonString)")
+            //            }
+            
+            
+            
+            
+            guard let httpResponse = response as? HTTPURLResponse,
+                  httpResponse.statusCode == 200 else {
+                print(#fileID, #function, #line, "- 할일 목록 수정 실패(응답)")
+                return
+            }
+            
+            print(#fileID, #function, #line, "- 할 일 목록 수정 성공(응답)")
+            do {
+                self.getToDoMethod()
+                
+                
+//                let todoResponse: ToDoResponse = try JSONDecoder().decode(ToDoResponse.self, from: data)
+//                print(#fileID, #function, #line, "포스트\(todoResponse) ")
+//
+//                // 데이터 업데이트
+//                self.toDoList = todoResponse.data
+//                self.makeSection()
+//
+//                // 테이블뷰 갱신
+//                DispatchQueue.main.async {
+//                    self.myTableView.reloadData()
+//                }
+              
+            } catch {
+                print(#fileID, #function, #line, "- \(error)")
+            }
+        }
+        
+        task.resume()
+        
+        
+        
+        
+    }
+    
+    
     fileprivate func makeSection(){
         
         //grouping : value 값, 뒤에는 key
@@ -471,7 +524,7 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, Sen
                     
                     self.deleteMethod(deleteID)
                     
-                    self.toDoList.remove(at: indexPath.row)
+                  
                     
                     print(#fileID, #function, #line, "- \(self.toDoList.self)")
                     
