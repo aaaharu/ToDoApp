@@ -11,6 +11,9 @@ import UIKit
 class AddVC: UIViewController {
     
     var finishBool: Bool = false
+  
+   
+    
     
     @IBOutlet weak var backBtn: UIBarButtonItem!
     @IBOutlet weak var toDoTF: UITextField!
@@ -77,14 +80,17 @@ class AddVC: UIViewController {
         guard let url = URL(string: urlString) else { return }
         
         
+        let now = Date()
+        let dateFormatter = DateFormatter()
+        let dateString = dateFormatter.string(from: now)
         
         // JSON 데이터
         let priJsonData: [String: Any] = [
             "title" : "\(addToDoTitle)",
-            
             // 완료 스위치를 누르면 false가 true로 바뀌는 토글 메서드 추가
             // 어떻게 넣지? 토글 기능으로
-            "is_done" : finishBool
+            "is_done" : finishBool,
+            "updated_at" : dateString
         ]
         
         // JSON 데이터로 직렬화하는 기능 - JSONSerialization

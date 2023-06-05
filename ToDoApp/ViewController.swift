@@ -61,18 +61,17 @@ class ViewController: UIViewController{
         // 노티 - 수신기 등록
         NotificationCenter.default.addObserver(self, selector: #selector(reCallGetTodo), name: Notification.Name("CustomNotification"), object: nil)
         
-
-//        NotificationCenter.default.addObserver(self, selector: #selector(putCallGetTodo), name: Notification.Name("PutNotification"), object: nil)
+        
         
         
         // 검색
         searchBar.searchTextField.addTarget(self, action: #selector(searchBarInput(_:)), for: .editingChanged)
         
         // PutVC 받은 데이터
-        if var text = receiveData?.text,
-           var boolValue = receiveData?.boolValue,
-           var id = receiveData?.id
-            {
+        if let text = receiveData?.text,
+           let boolValue = receiveData?.boolValue,
+           let id = receiveData?.id
+        {
             print(#fileID, #function, #line, "- text \(text), boolValue \(boolValue), id\(id)")
             
             self.boolValue = boolValue
@@ -84,7 +83,7 @@ class ViewController: UIViewController{
     
     
     @IBAction func backToVC(unwindSegue: UIStoryboardSegue) {
-            print(#fileID, #function, #line, "- unwind")
+        print(#fileID, #function, #line, "- unwind")
         
         
         if let sourceVC = unwindSegue.source as? PutVC, let data = sourceVC.dataToSend as? (id: Int, text: String, boolValue: Bool) {
@@ -96,7 +95,7 @@ class ViewController: UIViewController{
         
         callPutMethod(receiveData?.text ?? "")
         
-        }
+    }
     
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
@@ -106,7 +105,7 @@ class ViewController: UIViewController{
         
         
         if segue.identifier == "NavtoPutVC" {
-
+            
             let putVC = segue.destination as! PutVC
             
             putVC.id = self.id
@@ -191,7 +190,7 @@ class ViewController: UIViewController{
                 
                 
                 DispatchQueue.main.async {
-                 
+                    
                     self.myTableView.reloadData()
                 }
                 
@@ -214,7 +213,7 @@ class ViewController: UIViewController{
         
     }
     
-   
+    
     @objc fileprivate func callSearchGET(_ query: String) {
         print(#fileID, #function, #line, "-  주석 ")
         
@@ -365,7 +364,7 @@ class ViewController: UIViewController{
         
         guard let url = URL(string: urlString) else { return }
         
-            print(#fileID, #function, #line, "- url\(url)")
+        print(#fileID, #function, #line, "- url\(url)")
         
         
         // JSON 데이터
@@ -376,7 +375,7 @@ class ViewController: UIViewController{
             // 어떻게 넣지? 토글 기능으로
             "is_done" : boolValue as Any
         ]
-         
+        
         // JSON 데이터로 직렬화하는 기능 - JSONSerialization
         let jsonData = try? JSONSerialization.data(withJSONObject: priJsonData)
         
@@ -411,21 +410,23 @@ class ViewController: UIViewController{
             
             print(#fileID, #function, #line, "- 할 일 목록 수정 성공(응답)")
             do {
+                
+                
                 self.getToDoMethod()
                 
                 
-//                let todoResponse: ToDoResponse = try JSONDecoder().decode(ToDoResponse.self, from: data)
-//                print(#fileID, #function, #line, "포스트\(todoResponse) ")
-//
-//                // 데이터 업데이트
-//                self.toDoList = todoResponse.data
-//                self.makeSection()
-//
-//                // 테이블뷰 갱신
-//                DispatchQueue.main.async {
-//                    self.myTableView.reloadData()
-//                }
-              
+                //                let todoResponse: ToDoResponse = try JSONDecoder().decode(ToDoResponse.self, from: data)
+                //                print(#fileID, #function, #line, "포스트\(todoResponse) ")
+                //
+                //                // 데이터 업데이트
+                //                self.toDoList = todoResponse.data
+                //                self.makeSection()
+                //
+                //                // 테이블뷰 갱신
+                //                DispatchQueue.main.async {
+                //                    self.myTableView.reloadData()
+                //                }
+                
             } catch {
                 print(#fileID, #function, #line, "- \(error)")
             }
@@ -524,7 +525,7 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, Sen
                     
                     self.deleteMethod(deleteID)
                     
-                  
+                    
                     
                     print(#fileID, #function, #line, "- \(self.toDoList.self)")
                     
@@ -557,7 +558,7 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, Sen
                     
                     
                     self.id = selectData?.id ?? 0
-                    
+                    self.boolValue = ((selectData?.isDone) != nil)
                     
                     
                     
@@ -633,6 +634,7 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, Sen
             
             cell.delegate = self
             
+            
             // 날짜 가져오기
             let sectionString = sectionDates[indexPath.section]
             // 날짜별로 데이터 가져오기
@@ -643,12 +645,33 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, Sen
                 let post = posts[indexPath.row]
                 print(#fileID, #function, #line, "- \(post)")
                 
+                
+                
+                
+                
                 // 제목 표시
                 if let title = post.title {
                     cell.label?.text = title
                 } else {
                     cell.label?.text = "제목 없음"
                 }
+                
+                // 셀 체크버튼 클릭
+                let selectData = post
+                if selectData.isDone == true {
+                    cell.checkBtn.configuration?.baseForegroundColor = .black
+                    // 취소선
+                    let strikeThroughTask = NSMutableAttributedString(string: selectData.title!)
+                    strikeThroughTask.addAttributes([
+                        NSAttributedString.Key.strikethroughStyle: NSUnderlineStyle.single.rawValue,
+                        NSAttributedString.Key.strikethroughColor: UIColor.darkGray,
+                        NSAttributedString.Key.font : UIFont.systemFont(ofSize: 17.0)
+                    ], range: NSMakeRange(0, strikeThroughTask.length))
+                    cell.label?.attributedText = strikeThroughTask
+                } else {
+                    cell.checkBtn.configuration?.baseForegroundColor = .lightGray
+                }
+                
                 
                 // 날짜 표시
                 var time: String = ""
@@ -707,8 +730,20 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, Sen
     }
     
     
+    //
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        
+        
+        
+        // 셀에 인덱스패스 전달해주기
+        // 셀에 접근
+        guard let cell = tableView.cellForRow(at: indexPath) as? ToDoCell
+        else { return }
+        
+        cell.indexPath = indexPath
+        
+    }
 }
-
 
 extension ViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
