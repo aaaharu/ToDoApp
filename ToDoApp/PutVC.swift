@@ -12,7 +12,6 @@ class PutVC: UIViewController {
     
     var id: Int = 0
     var toDoTitle: String = ""
-    var finishBool: Bool?
     var getBool: Bool?
     
     
@@ -52,7 +51,7 @@ class PutVC: UIViewController {
         
 //    dataToSend: (id: Int, text: String?, boolValue: Bool)?
         
-        dataToSend = (id: id, text: toDoTF.text, boolValue: finishBool)
+        dataToSend = (id: id, text: toDoTF.text, boolValue: getBool)
         
             performSegue(withIdentifier: "BackToVC", sender: dataToSend)
             
@@ -65,7 +64,7 @@ class PutVC: UIViewController {
     @IBAction fileprivate func boolSwitchClicked(_ sender: UISwitch) {
         
         getBool?.toggle()
-        print(#fileID, #function, #line, "- finishBool: 완료 상태 \(String(describing: getBool))")
+        print(#fileID, #function, #line, "-  완료 상태 \(String(describing: getBool))")
         
     }
     

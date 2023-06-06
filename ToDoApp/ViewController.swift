@@ -81,6 +81,7 @@ class ViewController: UIViewController, ClickedCheckBtn{
     
     
     
+     // 셀이 클릭되었을 때 is_done 값을 바꿔주는 함수
         func selectDataChanging(_ nowIsDone: inout Bool) -> Bool {
     
             print(#fileID, #function, #line, "- \(String(describing: nowIsDone))")
@@ -91,6 +92,8 @@ class ViewController: UIViewController, ClickedCheckBtn{
             let changeBool = nowIsDone
             print(#fileID, #function, #line, "- 함수 변경된 값 반영\(String(describing: changeBool))")
             
+            // 바뀐 값을 putMethod로 입력하여 호출
+            
             callPutMethod(nil, changeBool)
             
             return changeBool
@@ -98,12 +101,10 @@ class ViewController: UIViewController, ClickedCheckBtn{
         }
     
     
+    // 셀의 체크박스 버튼이 눌릴 때 호출되는 함수
     func clickedChangeDone(cell: ToDoCell) {
         print(#fileID, #function, #line, "- 값이 원래 \(String(describing: testIsDone))")
         
-        // 값이 안 바뀜.. 옵셔널에서 옵셔널 바인딩 시도
-        // 값 변경
-    
         DispatchQueue.main.async {
             self.testIsDone = self.selectDataIsChanged
             print(#fileID, #function, #line, "- 값이 1차 바뀜! 할당되는 영역 \(String(describing: self.testIsDone))")
@@ -205,7 +206,6 @@ class ViewController: UIViewController, ClickedCheckBtn{
             putVC.id = self.id
             putVC.toDoTitle = self.toDotitle
             putVC.getBool = self.toDoFinish
-            putVC.finishBool = self.testIsDone
         }
     }
     
@@ -450,11 +450,19 @@ class ViewController: UIViewController, ClickedCheckBtn{
         print(#fileID, #function, #line, "- url\(url)")
         
         var title: String = ""
+        var unWrapedIsDone: Bool = true
         
         // 타이틀 옵셔널 벗기기
         if putToDoTitle != nil || !(putToDoTitle?.isEmpty ?? true) {
             title = putToDoTitle ?? ""
         }
+        
+        // 불값 옵셔널 벗기기
+        if is_done != nil {
+            unWrapedIsDone = is_done ?? true
+        }
+            print(#fileID, #function, #line, "- \(is_done)")
+                print(#fileID, #function, #line, "- \(unWrapedIsDone)")
         
         // JSON 데이터
         let priJsonData: [String: Any] = [
@@ -463,7 +471,8 @@ class ViewController: UIViewController, ClickedCheckBtn{
             
             // 완료 스위치를 누르면 false가 true로 바뀌는 토글 메서드 추가
             // 어떻게 넣지? 토글 기능으로
-            "is_done" : is_done as Any
+            "is_done" : unWrapedIsDone
+        
         ]
         
         // JSON 데이터로 직렬화하는 기능 - JSONSerialization
