@@ -74,8 +74,7 @@ class ViewController: UIViewController, ClickedCheckBtn{
         // 검색
         searchBar.searchTextField.addTarget(self, action: #selector(searchBarInput(_:)), for: .editingChanged)
         
-        // PutVC 수정한 데이터 가져오기
-        putDataToSend()
+        
         
     }
     
@@ -91,6 +90,8 @@ class ViewController: UIViewController, ClickedCheckBtn{
             
             let changeBool = nowIsDone
             print(#fileID, #function, #line, "- 함수 변경된 값 반영\(String(describing: changeBool))")
+            
+            callPutMethod(nil, changeBool)
             
             return changeBool
     
@@ -112,8 +113,8 @@ class ViewController: UIViewController, ClickedCheckBtn{
         
 
         print(#fileID, #function, #line, "- 값이 3차. 2차 값 그대로 \(String(describing: testIsDone))")
+      
         
-        putDataToSend()
       
     }
     
@@ -137,21 +138,8 @@ class ViewController: UIViewController, ClickedCheckBtn{
         
         print(#fileID, #function, #line, "- \(sectionDates)")
     }
-    
-    
-    // PutVC 수정한 데이터 가져오기
-    fileprivate func putDataToSend() {
-        
-        if let text = receiveData?.text,
-           let boolValue = receiveData?.boolValue,
-           let id = receiveData?.id
-        {
-            print(#fileID, #function, #line, "- text \(text), boolValue \(boolValue), id\(id)")
-            
-            self.testIsDone = boolValue
-            
-        }
-    }
+
+  
     // MARK: - UI 관련
     
     fileprivate func setupUI() {
@@ -192,13 +180,14 @@ class ViewController: UIViewController, ClickedCheckBtn{
         print(#fileID, #function, #line, "- unwind")
         
         
-        if let sourceVC = unwindSegue.source as? PutVC, let data = sourceVC.dataToSend as? (id: Int, text: String, boolValue: Bool) {
+        if let sourceVC = unwindSegue.source as? PutVC,
+           let data = sourceVC.dataToSend as? (id: Int, text: String, boolValue: Bool) {
             receiveData = data
             
             print(#fileID, #function, #line, "- \(String(describing: receiveData))")
         }
         
-        callPutMethod(receiveData?.text ?? "")
+        callPutMethod(receiveData?.text ?? "", receiveData?.boolValue)
         
     }
     
@@ -451,7 +440,7 @@ class ViewController: UIViewController, ClickedCheckBtn{
         
     }
     
-    fileprivate func callPutMethod(_ putToDoTitle: String){
+    fileprivate func callPutMethod(_ putToDoTitle: String?, _ is_done: Bool?){
         print(#fileID, #function, #line, "-  \(id) ")
         
         let urlString: String = "https://phplaravel-574671-2962113.cloudwaysapps.com/api/v1/todos/\(id)"
@@ -460,14 +449,21 @@ class ViewController: UIViewController, ClickedCheckBtn{
         
         print(#fileID, #function, #line, "- url\(url)")
         
+        var title: String = ""
+        
+        // 타이틀 옵셔널 벗기기
+        if putToDoTitle != nil || !(putToDoTitle?.isEmpty ?? true) {
+            title = putToDoTitle ?? ""
+        }
         
         // JSON 데이터
         let priJsonData: [String: Any] = [
-            "title" : "\(putToDoTitle)",
+            
+            "title" : "\(String(describing: title))",
             
             // 완료 스위치를 누르면 false가 true로 바뀌는 토글 메서드 추가
             // 어떻게 넣지? 토글 기능으로
-            "is_done" : testIsDone as Any
+            "is_done" : is_done as Any
         ]
         
         // JSON 데이터로 직렬화하는 기능 - JSONSerialization
@@ -772,7 +768,7 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, Sen
             
             
             
-            if tableReferenceIsDone {
+            if testIsDone { // 완료했다
                 cell.checkBtn.configuration?.baseForegroundColor = .black
                 // 취소선
                 let strikeThroughTask = NSMutableAttributedString(string: selectData.title!)
