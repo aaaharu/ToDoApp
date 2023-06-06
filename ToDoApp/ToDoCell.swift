@@ -9,7 +9,7 @@ import UIKit
 import Foundation
 
 @objc protocol SendIdProtocol {
-   @objc optional func sendID()
+    @objc optional func sendID()
 }
 
 protocol ClickedCheckBtn {
@@ -27,11 +27,12 @@ class ToDoCell: SwipeTableViewCell {
     var sendDelegate: SendIdProtocol?
     var clickedCheckDelegate: ClickedCheckBtn?
     
+    var testIsDone: Bool?
     
     override func awakeFromNib() {
         super.awakeFromNib()
         
-     
+        
     }
     
     @objc fileprivate func updateCellUI(){
@@ -50,27 +51,41 @@ class ToDoCell: SwipeTableViewCell {
         
         
         
-                // 버튼을 누르면 didSelecthRowAt 호출
-                // 1. 테이블뷰에 접근
-                guard let tableView = self.superview as? UITableView else {
-                    return
-                }
-                
-                
-        
-                // 2. 인덱스패스에 접근
-                guard let indexPath = tableView.indexPath(for: self) else {
-                    return
-                }
-        
-                // 3. didSelectRowAt 호출
-                tableView.delegate?.tableView?(tableView, didSelectRowAt: indexPath)
+        // 버튼을 누르면 didSelecthRowAt 호출
+        // 1. 테이블뷰에 접근
+        guard let tableView = self.superview as? UITableView else {
+            return
+        }
         
         
-            }
+        
+        // 2. 인덱스패스에 접근
+        guard let indexPath = tableView.indexPath(for: self) else {
+            return
+        }
+        
+        // 3. didSelectRowAt 호출
+        tableView.delegate?.tableView?(tableView, didSelectRowAt: indexPath)
+        // 3-2. 선택한 셀의 ID값을 VC로 보낸다.
+        NotificationCenter.default.post(name: Notification.Name("toggleBoolBtn"), object: nil)
+        // 3. 수정한 bool 값을 VC로 보낸다.
+        // 4. 수정한 bool을 Put method를 호출한다.
+        NotificationCenter.default.post(name: Notification.Name("toggleBoolBtn"), object: nil)
+            
+       
+        
+        
         
         
     }
+    
+    
+    
+    
+    
+    
+    
+}
 
 
 
