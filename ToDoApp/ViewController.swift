@@ -150,6 +150,26 @@ class ViewController: UIViewController {
 
     // MARK: - 데이터
     
+    // 완료 숨기기 - 데이터 섹션별로 정렬
+    fileprivate func reMakeSection(_ grouping: [Post]){
+        
+        //grouping : value 값, 뒤에는 key
+        // 날짜 key, 그외 데이터 값
+        groupingToDoList = Dictionary(grouping: grouping) { post in
+            guard let updated = post.upDated else { return "" }
+            // subscript -> String (날짜)
+            return String(updated.prefix(10))
+        }
+        
+        // key순으로 정렬 -> 날짜(key) 섹션 추출 // 내림차순 정렬: sorted().reserved()
+        sectionDates = groupingToDoList.keys.sorted().reversed()
+        
+        print(#fileID, #function, #line, "- toDoList \(groupingToDoList)")
+        
+        print(#fileID, #function, #line, "- \(sectionDates)")
+    }
+    
+    
     // 데이터 섹션별로 정렬
     fileprivate func makeSection(){
         
@@ -186,19 +206,30 @@ class ViewController: UIViewController {
         guard let titleString = sender.titleLabel?.text else { return }
         
         print(#fileID, #function, #line, "- \(titleString)")
+  
+
         
         if titleString == "완료 숨기기" {
             // isDone == true이면 숨기기
             // false만 데이터 배열에 다시 넣기, 섹션으로 묶기, 테이블뷰 다시 불러오기
-            toDoList = toDoList.filter { !($0.isDone ?? false) }
-            makeSection()
+           
+        let groupingPostMap = groupingToDoList.map{ $1 }.flatMap{ $0 }
+        let reGrouping = groupingPostMap.filter{ !($0.isDone ?? false) }
+            reMakeSection(reGrouping)
+            
             myTableView.reloadData()
             sender.setTitle("전체보기", for: .normal)
+            myTableView.reloadData()
+            
+            
         } else {
+
+            makeSection()
+            myTableView.reloadData()
+           
             // isDone == true 숨기기 취소
             // 데이터 배열 다시 로드(get호출), 섹션으로 묶기
-            getToDoMethod()
-            makeSection()
+           
             sender.setTitle("완료 숨기기", for: .normal)
         }
         
@@ -859,7 +890,10 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, Sen
         guard let cell = tableView.cellForRow(at: indexPath) as? ToDoCell
         else { return }
         
+     
         cell.indexPath = indexPath
+        cell.selectionStyle = .none
+        
         
         sendID()
         
@@ -912,6 +946,8 @@ extension ViewController: UITableViewDelegate {
 //MARK: - Helpers
 
 extension ViewController {
+    
+        
     
     private func findIndexPath(dataItem: Post) -> IndexPath {
         
