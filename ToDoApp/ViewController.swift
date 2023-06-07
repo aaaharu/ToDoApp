@@ -108,15 +108,21 @@ class ViewController: UIViewController {
                     
                     post.isDone = !post.isDone!
                     
-                    print(#fileID, #function, #line, "- \(post.isDone)")
+                    // 배열에 다시 저장
+                    
+                    let seclectItem = groupingToDoList[sectionString]?[indexPath.row]
+                    
+                        print(#fileID, #function, #line, "- <# 주석 #>")
+                    print(#fileID, #function, #line, "- \(seclectItem)")
+                    
+                    groupingToDoList[sectionString]?[indexPath.row].isDone = post.isDone
+                    
                     
                     let sendBoolValueArray = ["bool": post.isDone, "indexPath": indexPath] as [String : Any]
                     
                     NotificationCenter.default.post(name: Notification.Name("VCsendBoolValue"), object: nil,userInfo: sendBoolValueArray as [AnyHashable : Any])
                     
-                    DispatchQueue.main.async {
-                        self.myTableView.reloadData()
-                    }
+                  
                     
                     print(#fileID, #function, #line, "- \(String(describing: post.isDone))")
                     
@@ -126,7 +132,7 @@ class ViewController: UIViewController {
                         
                         self.callPutMethod(post.title, post.isDone) {
                             
-                            self.getToDoMethod()
+                        
                         
                         }
                         
@@ -765,7 +771,27 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, Sen
                     cell.label?.text = "제목 없음"
                 }
                 
-                
+                // 취소선 
+                if  post.isDone!{
+                    cell.checkBtn.configuration?.baseForegroundColor = .black
+                    // 취소선
+                    let strikeThroughTask = NSMutableAttributedString(string: cell.label.text ?? "")
+                    strikeThroughTask.addAttributes([
+                        NSAttributedString.Key.strikethroughStyle: NSUnderlineStyle.single.rawValue,
+                        NSAttributedString.Key.strikethroughColor: UIColor.darkGray,
+                        NSAttributedString.Key.font : UIFont.systemFont(ofSize: 17.0)
+                    ], range: NSMakeRange(0, strikeThroughTask.length))
+                    cell.label?.attributedText = strikeThroughTask
+                } else {
+                    cell.checkBtn.configuration?.baseForegroundColor = .lightGray
+                    let originalString = cell.label.text ?? ""
+                    let attributedString = NSMutableAttributedString(string: originalString)
+                    attributedString.removeAttribute(NSAttributedString.Key.strikethroughStyle, range: NSMakeRange(0, attributedString.length))
+                    attributedString.removeAttribute(NSAttributedString.Key.strikethroughColor, range: NSMakeRange(0, attributedString.length))
+                    attributedString.addAttribute(NSAttributedString.Key.font, value: UIFont.systemFont(ofSize: 17.0), range: NSMakeRange(0, attributedString.length))
+                    cell.label?.attributedText = attributedString
+                    
+                }
                 
                 // 날짜 표시
                 var time: String = ""
