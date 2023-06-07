@@ -9,6 +9,20 @@ import Foundation
 
 
 
+struct ItemResponse<T: Decodable>: Decodable {
+    let data: T?
+    let message: String?
+}
+
+struct ItemArrayResponse<T: Decodable>: Decodable {
+    let data: [T]
+}
+
+struct ToDoItemResponse: Decodable {
+    let data: Post?
+    let message: String?
+}
+
 
 
 struct ToDoResponse: Decodable {

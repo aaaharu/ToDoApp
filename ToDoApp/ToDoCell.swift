@@ -20,6 +20,7 @@ class ToDoCell: SwipeTableViewCell {
     
     var indexPath: IndexPath?
     
+    @IBOutlet weak var idLabel: UILabel!
     @IBOutlet weak var label: UILabel!
     @IBOutlet weak var dateLabel: UILabel!
     @IBOutlet weak var checkBtn: UIButton!

@@ -328,7 +328,7 @@ class ViewController: UIViewController {
         
     }
     
-    fileprivate func deleteMethod(_ deleteID: Int) {
+    fileprivate func deleteMethod(_ deleteID: Int, completion: @escaping () -> Void) {
         print(#fileID, #function, #line, "-  주석 ")
         
         let urlString: String = "https://phplaravel-574671-2962113.cloudwaysapps.com/api/v1/todos/\(deleteID)"
@@ -351,10 +351,10 @@ class ViewController: UIViewController {
             //            }
             do {
                 
-                let todoResponse: ToDoResponse = try JSONDecoder().decode(ToDoResponse.self, from: data)
+                let todoResponse: ItemResponse<Post> = try JSONDecoder().decode(ItemResponse<Post>.self, from: data)
                 print(#fileID, #function, #line, "포스트\(todoResponse) ")
                 
-                
+                completion()
                 
             } catch {
                 print(#fileID, #function, #line, "- \(error)")
@@ -416,7 +416,7 @@ class ViewController: UIViewController {
     fileprivate func callPutMethod(_ putToDoTitle: String?, _ is_done: Bool?){
         print(#fileID, #function, #line, "-  \(id) ")
         
-        let urlString: String = "https://phplaravel-574671-2962113.cloudwaysapps.com/api/v1/todos-json/\(id)"
+        let urlString: String = "https://phplaravel-574671-2962113.cloudwaysapps.com/api/v1/todos/\(id)"
         
             print(#fileID, #function, #line, "- urlString\(urlString)")
         
@@ -457,7 +457,7 @@ class ViewController: UIViewController {
         
         // HTTP 요청
         var urlReuqest = URLRequest(url: url)
-        urlReuqest.httpMethod = "POST"
+        urlReuqest.httpMethod = "PUT"
         urlReuqest.setValue("application/json", forHTTPHeaderField: "Content-Type")
         urlReuqest.httpBody = jsonData
         
@@ -532,22 +532,50 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, Sen
             
             let deleteAction = SwipeAction(style: .destructive, title: "삭제") { action, indexPath in
                 
-                if let deleteID = self.toDoList[indexPath.row].id {
+                
+                if let deleteID = self.findItem(indexPath: indexPath)?.id {
                     
-                    print(#fileID, #function, #line, "- \(self.toDoList.self)")
-                    print(#fileID, #function, #line, "- \(deleteID)")
-                    
-                    
-                    self.deleteMethod(deleteID)
-                    
-                    
-                    
-                    print(#fileID, #function, #line, "- \(self.toDoList.self)")
-                    
-                    
-                    self.reCallGetTodo()
-                    
+                    self.deleteMethod(deleteID, completion: { [weak self] in
+                        
+                        guard let self = self else { return }
+                        
+                        self.removeItem(indexPath: indexPath)
+                        
+                        DispatchQueue.main.async {
+                            
+                            tableView.deleteRows(at: [indexPath], with: .fade)
+//                            let sectionString = self.sectionDates[indexPath.section]
+//                            if self.groupingToDoList[sectionString]?.count ?? 0 < 1 {
+//
+//                                let indexSet = IndexSet(integer: indexPath.section)
+//                                tableView.deleteSections(indexSet, with: .fade)
+//                            }
+                        }
+                    })
                 }
+                
+//                if let deleteID = self.toDoList[indexPath.row].id {
+//
+//                    print(#fileID, #function, #line, "- \(self.toDoList.self)")
+//                    print(#fileID, #function, #line, "- \(deleteID)")
+//
+//
+//                    self.deleteMethod(deleteID, completion: { [weak self] in
+//
+//                        guard let self = self else { return }
+//
+//                        let sectionString = self.sectionDates[indexPath.section]
+//
+//                        self.groupingToDoList[sectionString]?.remove(at: indexPath.row)
+//                        DispatchQueue.main.async {
+//                            tableView.deleteRows(at: [indexPath], with: .fade)
+//                        }
+//                    })
+//
+//                    print(#fileID, #function, #line, "- \(self.toDoList.count)")
+////                    self.reCallGetTodo()
+//
+//                }
             }
             
             return [deleteAction]
@@ -633,8 +661,6 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, Sen
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
-        
-        
         if let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoCell", for: indexPath) as? ToDoCell {
             print(#fileID, #function, #line, "- <# 주석 #>")
             
@@ -663,6 +689,8 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, Sen
                 
                 cell.indexPath = indexPath
                 cell.testIsDone = testIsDone
+                
+                cell.idLabel.text = "ID: \(post.id ?? 0)"
                 
                 if testIsDone {
                     cell.checkBtn.configuration?.baseForegroundColor = .black
@@ -800,7 +828,17 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, Sen
 
 extension ViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        return UITableView.automaticDimension
+        
+        let sectionString = sectionDates[section]
+        
+        // 섹션에 있는 날짜별로 행 반환
+        let rowsCount = groupingToDoList[sectionString]?.count ?? 0
+        
+        if rowsCount < 1 {
+            return 0.0
+        } else {
+            return UITableView.automaticDimension
+        }
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
@@ -810,5 +848,62 @@ extension ViewController: UITableViewDelegate {
     fileprivate func sectionHeight() {
         self.myTableView.sectionHeaderHeight = UITableView.automaticDimension
         self.myTableView.estimatedSectionHeaderHeight = 50
+    }
+}
+
+//MARK: - Helpers
+
+extension ViewController {
+    
+    private func findIndexPath(dataItem: Post) -> IndexPath {
+        
+        let sectionIndex = sectionDates.firstIndex(of: dataItem.upDated ?? "") ?? 0
+        
+        let sectionString: String = sectionDates[sectionIndex]
+        
+        // 섹션에 있는 날짜별로 행 반환
+        let rowItems = groupingToDoList[sectionString] ?? []
+        
+        let rowIndex = rowItems.firstIndex(where: { $0.id ?? 0 == dataItem.id ?? 0 }) ?? 0
+        
+        return IndexPath(row: rowIndex, section: sectionIndex)
+    }
+    
+    private func findItem(indexPath: IndexPath) -> Post? {
+            
+        let sectionString: String = sectionDates[indexPath.section]
+        
+        // 섹션에 있는 날짜별로 행 반환
+        return groupingToDoList[sectionString]?[indexPath.row]
+    }
+    
+    private func removeItem(indexPath: IndexPath) {
+        
+        let sectionString = sectionDates[indexPath.section]
+        
+        // 섹션에 있는 날짜별로 행 반환
+        groupingToDoList[sectionString]?.remove(at: indexPath.row)
+    }
+    
+    private func removeData(dataItem: Post) {
+        
+        let sectionIndex = sectionDates.firstIndex(of: dataItem.upDated ?? "") ?? 0
+        
+        let sectionString: String = sectionDates[sectionIndex]
+        
+        if groupingToDoList[sectionString]?.count ?? 0 < 1 {
+            groupingToDoList.removeValue(forKey: sectionString)
+            return
+        }
+        
+        // 섹션에 있는 날짜별로 행 반환
+        var rowItems = groupingToDoList[sectionString] ?? []
+        
+        let rowIndex = rowItems.firstIndex(where: { $0.id ?? 0 == dataItem.id ?? 0 }) ?? 0
+        
+        groupingToDoList[sectionString]?.remove(at: rowIndex)
+        
+    
+        
     }
 }

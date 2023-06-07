@@ -38,8 +38,18 @@
                             <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="10" translatesAutoresizingMaskIntoConstraints="NO" id="6yE-jQ-aFi">
                                 <rect key="frame" x="60" y="10" width="482" height="138"/>
                                 <subviews>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="ID:" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="W5g-J0-ApD">
+                                        <rect key="frame" x="0.0" y="0.0" width="482" height="20.333333333333332"/>
+                                        <constraints>
+                                            <constraint firstAttribute="width" constant="482" id="79T-gx-Rfd"/>
+                                            <constraint firstAttribute="height" constant="20.333333333333332" id="dMU-1K-NZn"/>
+                                        </constraints>
+                                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                        <nil key="textColor"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="jjZ-w9-JDx">
-                                        <rect key="frame" x="0.0" y="0.0" width="482" height="108"/>
+                                        <rect key="frame" x="0.0" y="30.333333333333336" width="482" height="77.666666666666657"/>
                                         <string key="text">LabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabelLabel</string>
                                         <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                         <nil key="textColor"/>
@@ -70,6 +80,7 @@
             <connections>
                 <outlet property="checkBtn" destination="wIC-8w-f1Q" id="JZI-q9-hod"/>
                 <outlet property="dateLabel" destination="lvG-wx-9OT" id="JhI-8J-8PE"/>
+                <outlet property="idLabel" destination="W5g-J0-ApD" id="jix-Ls-zFO"/>
                 <outlet property="label" destination="jjZ-w9-JDx" id="XRw-1s-f62"/>
             </connections>
             <point key="canvasLocation" x="264.12213740458014" y="48.591549295774648"/>
