@@ -7,12 +7,13 @@
 
 import SwipeCellKit
 import UIKit
-
 class ViewController: UIViewController {
     
+    var completionClosure: (() -> Void)?
 
     var receiveData: (id: Int, text: String, boolValue: Bool)?
     
+
     // MARK: - 데이터 담아서 putVC에 보내주기
     // 아이디, title, finish
     var id: Int = 0
@@ -23,7 +24,9 @@ class ViewController: UIViewController {
     var selectDataIsChanged: Bool =  false
     var testIsDone: Bool = false
     
-    var tableReferenceIsDone: Bool = false
+
+    
+
     
     // 섹션을 위해 데이터를 날짜 순으로 그룹화
     var groupingToDoList: [String: [Post]] = [:]
@@ -79,12 +82,64 @@ class ViewController: UIViewController {
         
     }
     
-    @objc fileprivate func boolChanged() {
-        print(#fileID, #function, #line, "- <# 주석 #>")
-        testIsDone.toggle()
+    @objc fileprivate func boolChanged(_ notification: Notification) {
+            print(#fileID, #function, #line, "- <# 주석 #>")
+          
         
-        callPutMethod(nil, testIsDone)
-    }
+            if let data = notification.userInfo as? [String: Any] {
+                
+                let indexPath = data["indexPath"] as? IndexPath
+                print(#fileID, #function, #line, "- 받아온 indexPath \(String(describing: indexPath))")
+                
+                guard let indexPath = indexPath else { return }
+                
+            
+                // 날짜 가져오기
+                 let sectionString = sectionDates[indexPath.section]
+                // 날짜별로 데이터 가져오기
+                // posts 데이터 접근
+                if let posts = groupingToDoList[sectionString] {
+                    print(#fileID, #function, #line, "- \(posts)")
+                    // post 특정 행에 접근
+                    var post = posts[indexPath.row]
+                    print(#fileID, #function, #line, "- \(String(describing: post.isDone))")
+                    
+                    post.id = self.id
+                    
+                    post.isDone = !post.isDone!
+                    
+                    print(#fileID, #function, #line, "- \(post.isDone)")
+                    
+                    let sendBoolValueArray = ["bool": post.isDone, "indexPath": indexPath] as [String : Any]
+                    
+                    NotificationCenter.default.post(name: Notification.Name("VCsendBoolValue"), object: nil,userInfo: sendBoolValueArray as [AnyHashable : Any])
+                    
+                    DispatchQueue.main.async {
+                        self.myTableView.reloadData()
+                    }
+                    
+                    print(#fileID, #function, #line, "- \(String(describing: post.isDone))")
+                    
+                    completionClosure = { [weak self] in
+                        guard let self = self else { return }
+                        print(#fileID, #function, #line, "- 클로저가 실행되었다.\(String(describing: post.title))")
+                        
+                        self.callPutMethod(post.title, post.isDone) {
+                            
+                            self.getToDoMethod()
+                        
+                        }
+                        
+                    }
+                    completionClosure?()
+                    
+                    
+                }
+            }
+            
+            
+            
+        }
     
 
     // MARK: - 데이터
@@ -156,7 +211,8 @@ class ViewController: UIViewController {
             print(#fileID, #function, #line, "- \(String(describing: receiveData))")
         }
         
-        callPutMethod(receiveData?.text ?? "", receiveData?.boolValue)
+        callPutMethod(receiveData?.text ?? "", receiveData?.boolValue) {}
+        
         
     }
     
@@ -413,7 +469,7 @@ class ViewController: UIViewController {
         
     }
     
-    fileprivate func callPutMethod(_ putToDoTitle: String?, _ is_done: Bool?){
+    fileprivate func callPutMethod(_ putToDoTitle: String?, _ is_done: Bool?, completion: @escaping () -> Void){
         print(#fileID, #function, #line, "-  \(id) ")
         
         let urlString: String = "https://phplaravel-574671-2962113.cloudwaysapps.com/api/v1/todos/\(id)"
@@ -488,7 +544,7 @@ class ViewController: UIViewController {
             do {
                 
                 
-                self.getToDoMethod()
+                completion()
                 
                 
                 //                let todoResponse: ToDoResponse = try JSONDecoder().decode(ToDoResponse.self, from: data)
@@ -664,6 +720,12 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, Sen
         if let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoCell", for: indexPath) as? ToDoCell {
             print(#fileID, #function, #line, "- <# 주석 #>")
             
+            
+          
+            
+      
+            
+            
             //            if cell.label != nil {
             //                print(#fileID, #function, #line, "- 레이블이 연결되었습니다.")
             //            } else {
@@ -692,26 +754,7 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, Sen
                 
                 cell.idLabel.text = "ID: \(post.id ?? 0)"
                 
-                if testIsDone {
-                    cell.checkBtn.configuration?.baseForegroundColor = .black
-                    // 취소선
-                    let strikeThroughTask = NSMutableAttributedString(string: cell.label.text ?? "")
-                    strikeThroughTask.addAttributes([
-                        NSAttributedString.Key.strikethroughStyle: NSUnderlineStyle.single.rawValue,
-                        NSAttributedString.Key.strikethroughColor: UIColor.darkGray,
-                        NSAttributedString.Key.font : UIFont.systemFont(ofSize: 17.0)
-                    ], range: NSMakeRange(0, strikeThroughTask.length))
-                    cell.label?.attributedText = strikeThroughTask
-                } else {
-                    cell.checkBtn.configuration?.baseForegroundColor = .lightGray
-                    let originalString = cell.label.text ?? ""
-                    let attributedString = NSMutableAttributedString(string: originalString)
-                    attributedString.removeAttribute(NSAttributedString.Key.strikethroughStyle, range: NSMakeRange(0, attributedString.length))
-                    attributedString.removeAttribute(NSAttributedString.Key.strikethroughColor, range: NSMakeRange(0, attributedString.length))
-                    attributedString.addAttribute(NSAttributedString.Key.font, value: UIFont.systemFont(ofSize: 17.0), range: NSMakeRange(0, attributedString.length))
-                    cell.label?.attributedText = attributedString
-                    
-                }
+                
                 
                 
                 
@@ -812,18 +855,7 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, Sen
         
     }
     
-    
-    @objc fileprivate func checkBtnClickedBoolChanged(_ sender: UIButton) {
-        print(#fileID, #function, #line, "- <# 주석 #>")
-        self.testIsDone.toggle()
-        
-        
-        callPutMethod(nil, testIsDone)
-        
-        
-        
-        
-    }
+
 }
 
 extension ViewController: UITableViewDelegate {

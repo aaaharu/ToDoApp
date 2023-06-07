@@ -121,7 +121,7 @@
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="mgj-au-gkA">
+                            <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" preferredStyle="sliding" translatesAutoresizingMaskIntoConstraints="NO" id="mgj-au-gkA">
                                 <rect key="frame" x="314" y="429.33333333333331" width="51" height="31"/>
                                 <connections>
                                     <action selector="boolSwitchClicked:" destination="HBy-y9-BG2" eventType="valueChanged" id="bhm-Va-0Oy"/>
