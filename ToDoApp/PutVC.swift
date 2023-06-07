@@ -96,7 +96,7 @@ class PutVC: UIViewController {
         
         // HTTP 요청
         var urlReuqest = URLRequest(url: url)
-        urlReuqest.httpMethod = "PUT"
+        urlReuqest.httpMethod = "POST"
         urlReuqest.setValue("application/json", forHTTPHeaderField: "Content-Type")
         urlReuqest.httpBody = jsonData
         

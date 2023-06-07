@@ -416,7 +416,7 @@ class ViewController: UIViewController {
     fileprivate func callPutMethod(_ putToDoTitle: String?, _ is_done: Bool?){
         print(#fileID, #function, #line, "-  \(id) ")
         
-        let urlString: String = "https://phplaravel-574671-2962113.cloudwaysapps.com/api/v1/todos/\(id)"
+        let urlString: String = "https://phplaravel-574671-2962113.cloudwaysapps.com/api/v1/todos-json/\(id)"
         
             print(#fileID, #function, #line, "- urlString\(urlString)")
         
@@ -457,7 +457,7 @@ class ViewController: UIViewController {
         
         // HTTP 요청
         var urlReuqest = URLRequest(url: url)
-        urlReuqest.httpMethod = "PUT"
+        urlReuqest.httpMethod = "POST"
         urlReuqest.setValue("application/json", forHTTPHeaderField: "Content-Type")
         urlReuqest.httpBody = jsonData
         

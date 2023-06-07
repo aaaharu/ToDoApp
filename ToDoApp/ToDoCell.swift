@@ -70,7 +70,7 @@ class ToDoCell: SwipeTableViewCell {
         NotificationCenter.default.post(name: Notification.Name("toggleBoolBtn"), object: nil)
         // 3. 수정한 bool 값을 VC로 보낸다.
         // 4. 수정한 bool을 Put method를 호출한다.
-        NotificationCenter.default.post(name: Notification.Name("toggleBoolBtn"), object: nil)
+//        NotificationCenter.default.post(name: Notification.Name("toggleBoolBtn"), object: nil)
             
        
         
