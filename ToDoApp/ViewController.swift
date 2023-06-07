@@ -73,7 +73,7 @@ class ViewController: UIViewController {
         NotificationCenter.default.addObserver(self, selector: #selector(reCallGetTodo), name: Notification.Name("CustomNotification"), object: nil)
         
         // 노티 - (발신:ToDocell) 체크버튼 클릭시 완료 상태 변경 수신기 등록
-        NotificationCenter.default.addObserver(self, selector: #selector(boolChanged), name: Notification.Name("toggleBoolBtn") , object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(checkBtnClickedboolChanged), name: Notification.Name("toggleBoolBtn") , object: nil)
         
         // 검색
         searchBar.searchTextField.addTarget(self, action: #selector(searchBarInput(_:)), for: .editingChanged)
@@ -82,7 +82,7 @@ class ViewController: UIViewController {
         
     }
     
-    @objc fileprivate func boolChanged(_ notification: Notification) {
+    @objc fileprivate func checkBtnClickedboolChanged(_ notification: Notification) {
             print(#fileID, #function, #line, "- <# 주석 #>")
           
         
@@ -107,22 +107,18 @@ class ViewController: UIViewController {
                     post.id = self.id
                     
                     post.isDone = !post.isDone!
-                    
-                    // 배열에 다시 저장
-                    
-                    let seclectItem = groupingToDoList[sectionString]?[indexPath.row]
-                    
-                        print(#fileID, #function, #line, "- <# 주석 #>")
-                    print(#fileID, #function, #line, "- \(seclectItem)")
+                    // regrouping을 해줄 때 셀을 숨길 때 필요한 데이터 
+                    toDoList[indexPath.row].isDone = post.isDone
                     
                     groupingToDoList[sectionString]?[indexPath.row].isDone = post.isDone
                     
                     
                     let sendBoolValueArray = ["bool": post.isDone, "indexPath": indexPath] as [String : Any]
                     
+                        print(#fileID, #function, #line, "여기에서 확인해보자 \(groupingToDoList) ")
+                    
                     NotificationCenter.default.post(name: Notification.Name("VCsendBoolValue"), object: nil,userInfo: sendBoolValueArray as [AnyHashable : Any])
                     
-                  
                     
                     print(#fileID, #function, #line, "- \(String(describing: post.isDone))")
                     
@@ -132,7 +128,7 @@ class ViewController: UIViewController {
                         
                         self.callPutMethod(post.title, post.isDone) {
                             
-                        
+                            
                         
                         }
                         
@@ -213,17 +209,18 @@ class ViewController: UIViewController {
             // isDone == true이면 숨기기
             // false만 데이터 배열에 다시 넣기, 섹션으로 묶기, 테이블뷰 다시 불러오기
            
-        let groupingPostMap = groupingToDoList.map{ $1 }.flatMap{ $0 }
-        let reGrouping = groupingPostMap.filter{ !($0.isDone ?? false) }
+//        let groupingPostMap = groupingToDoList.map{ $1 }.flatMap{ $0 }
+        let reGrouping = toDoList.filter{ !($0.isDone ?? false) }
+                print(#fileID, #function, #line, "- regrouping\(reGrouping)")
             reMakeSection(reGrouping)
             
             myTableView.reloadData()
             sender.setTitle("전체보기", for: .normal)
-            myTableView.reloadData()
+        
             
             
         } else {
-
+            
             makeSection()
             myTableView.reloadData()
            
@@ -751,6 +748,9 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, Sen
         return groupingToDoList[sectionString]?.count ?? 0
     }
     
+  
+    
+    
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
@@ -777,6 +777,7 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, Sen
             // 날짜 가져오기
             let sectionString = sectionDates[indexPath.section]
             // 날짜별로 데이터 가져오기
+            
             // posts 데이터 접근
             if let posts = groupingToDoList[sectionString] {
                 print(#fileID, #function, #line, "- \(posts)")
@@ -802,10 +803,10 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, Sen
                     cell.label?.text = "제목 없음"
                 }
                 
-                // 취소선 
+                // 취소선
                 if  post.isDone!{
                     cell.checkBtn.configuration?.baseForegroundColor = .black
-                    // 취소선
+                    // 취소선이 셀이 재사용되면서 여전히 남아버림. -> prepareForReuse에서 셀의 속성 초기화 작업할것
                     let strikeThroughTask = NSMutableAttributedString(string: cell.label.text ?? "")
                     strikeThroughTask.addAttributes([
                         NSAttributedString.Key.strikethroughStyle: NSUnderlineStyle.single.rawValue,
@@ -813,7 +814,9 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, Sen
                         NSAttributedString.Key.font : UIFont.systemFont(ofSize: 17.0)
                     ], range: NSMakeRange(0, strikeThroughTask.length))
                     cell.label?.attributedText = strikeThroughTask
+                    
                 } else {
+                    
                     cell.checkBtn.configuration?.baseForegroundColor = .lightGray
                     let originalString = cell.label.text ?? ""
                     let attributedString = NSMutableAttributedString(string: originalString)
@@ -823,6 +826,8 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, Sen
                     cell.label?.attributedText = attributedString
                     
                 }
+            
+
                 
                 // 날짜 표시
                 var time: String = ""

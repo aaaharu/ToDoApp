@@ -43,6 +43,14 @@ class ToDoCell: SwipeTableViewCell {
         
     }
     
+    // 재활용되기 전에 호출되는 메서드로 셀의 속성을 초기화하는 작업
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        
+        label.attributedText = nil
+        
+    }
+    
     @objc fileprivate func updateCellUI(){
         
     }
