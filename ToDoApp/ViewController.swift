@@ -85,7 +85,6 @@ class ViewController: UIViewController {
     @objc fileprivate func checkBtnClickedboolChanged(_ notification: Notification) {
             print(#fileID, #function, #line, "- <# 주석 #>")
           
-        
             if let data = notification.userInfo as? [String: Any] {
                 
                 let indexPath = data["indexPath"] as? IndexPath
@@ -93,7 +92,6 @@ class ViewController: UIViewController {
                 
                 guard let indexPath = indexPath else { return }
                 
-            
                 // 날짜 가져오기
                  let sectionString = sectionDates[indexPath.section]
                 // 날짜별로 데이터 가져오기
@@ -107,7 +105,7 @@ class ViewController: UIViewController {
                     post.id = self.id
                     
                     post.isDone = !post.isDone!
-                    // regrouping을 해줄 때 셀을 숨길 때 필요한 데이터 
+                    // regrouping을 해줄 때 셀을 숨길 때 필요한 데이터
                     toDoList[indexPath.row].isDone = post.isDone
                     
                     groupingToDoList[sectionString]?[indexPath.row].isDone = post.isDone
@@ -683,19 +681,15 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, Sen
                 
                 
                 func sendID() {
-                    
                     let sectionStirng = self.sectionDates[indexPath.section]
                     let postsInSection = self.groupingToDoList[sectionStirng]
                     let selectData = postsInSection?[indexPath.row]
-                    
                     
                     // 아이디 값 넣어주기
                     self.id = selectData?.id ?? 0
                     self.testIsDone = ((selectData?.isDone) != nil)
                     self.toDotitle = selectData?.title ?? ""
                     self.toDoFinish = ((selectData?.isDone) != nil)
-                    
-                    
                 }
                 
                 
@@ -726,7 +720,6 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, Sen
         let sectionLabel = UILabel(frame: CGRect(x: 10, y: 0, width: tableView.bounds.size.width, height: tableView.bounds.size.height))
         sectionLabel.font = UIFont(name: "Helvetica-Bold", size: 30)
         
-        
         sectionLabel.textColor = .black
         sectionLabel.text = sectionDates[section]
         sectionLabel.sizeToFit()
@@ -742,10 +735,11 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, Sen
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        let sectionString: String = sectionDates[section]
-        
-        // 섹션에 있는 날짜별로 행 반환
-        return groupingToDoList[sectionString]?.count ?? 0
+//        let sectionString: String = sectionDates[section]
+//
+//        // 섹션에 있는 날짜별로 행 반환
+//        return groupingToDoList[sectionString]?.count ?? 0
+        return getRows(section: section).count
     }
     
   
@@ -754,120 +748,7 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, Sen
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
-        if let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoCell", for: indexPath) as? ToDoCell {
-            print(#fileID, #function, #line, "- <# 주석 #>")
-            
-            
-          
-            
-      
-            
-            
-            //            if cell.label != nil {
-            //                print(#fileID, #function, #line, "- 레이블이 연결되었습니다.")
-            //            } else {
-            //                print(#fileID, #function, #line, "- 레이블이 연결되지 않았습니다!")
-            //            }
-            
-            //            let cellData: Post = toDoList[indexPath.row]
-            
-            cell.delegate = self
-            //            cell.clickedCheckDelegate = self
-            
-            // 날짜 가져오기
-            let sectionString = sectionDates[indexPath.section]
-            // 날짜별로 데이터 가져오기
-            
-            // posts 데이터 접근
-            if let posts = groupingToDoList[sectionString] {
-                print(#fileID, #function, #line, "- \(posts)")
-                // post 특정 행에 접근
-                let post = posts[indexPath.row]
-                print(#fileID, #function, #line, "- \(post)")
-                
-                selectDataIsChanged = post.isDone ?? false
-                
-                cell.indexPath = indexPath
-                cell.testIsDone = testIsDone
-                
-                cell.idLabel.text = "ID: \(post.id ?? 0)"
-                
-                
-                
-                
-                
-                // 제목 표시
-                if let title = post.title {
-                    cell.label?.text = title
-                } else {
-                    cell.label?.text = "제목 없음"
-                }
-                
-                // 취소선
-                if  post.isDone!{
-                    cell.checkBtn.configuration?.baseForegroundColor = .black
-                    // 취소선이 셀이 재사용되면서 여전히 남아버림. -> prepareForReuse에서 셀의 속성 초기화 작업할것
-                    let strikeThroughTask = NSMutableAttributedString(string: cell.label.text ?? "")
-                    strikeThroughTask.addAttributes([
-                        NSAttributedString.Key.strikethroughStyle: NSUnderlineStyle.single.rawValue,
-                        NSAttributedString.Key.strikethroughColor: UIColor.darkGray,
-                        NSAttributedString.Key.font : UIFont.systemFont(ofSize: 17.0)
-                    ], range: NSMakeRange(0, strikeThroughTask.length))
-                    cell.label?.attributedText = strikeThroughTask
-                    
-                } else {
-                    
-                    cell.checkBtn.configuration?.baseForegroundColor = .lightGray
-                    let originalString = cell.label.text ?? ""
-                    let attributedString = NSMutableAttributedString(string: originalString)
-                    attributedString.removeAttribute(NSAttributedString.Key.strikethroughStyle, range: NSMakeRange(0, attributedString.length))
-                    attributedString.removeAttribute(NSAttributedString.Key.strikethroughColor, range: NSMakeRange(0, attributedString.length))
-                    attributedString.addAttribute(NSAttributedString.Key.font, value: UIFont.systemFont(ofSize: 17.0), range: NSMakeRange(0, attributedString.length))
-                    cell.label?.attributedText = attributedString
-                    
-                }
-            
-
-                
-                // 날짜 표시
-                var time: String = ""
-                if var upDate = post.upDated {
-                    
-                    
-                    print(#fileID, #function, #line, "- \(upDate)")
-                    
-                    upDate.removeLast()
-                    
-                    print(#fileID, #function, #line, "- \(upDate)")
-                    
-                    
-                    let customDateFormatter = DateFormatter()
-                    customDateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS"
-                    
-                    
-                    if let date = customDateFormatter.date(from: upDate) {
-                        print(#fileID, #function, #line, "- \(date)")
-                        time = DateFormatter.localizedString(from: date ?? Date(), dateStyle: .long, timeStyle: .short)
-                    } else {
-                        print(#fileID, #function, #line, "- 날짜 변환 실패")
-                    }
-                    
-                    
-                    cell.dateLabel?.text = time
-                    
-                } else {
-                    cell.dateLabel?.text = "시간 없음"
-                }
-                
-            }
-            
-            
-            return cell
-        }
-        
-        return UITableViewCell()
-        
-        
+        return makeTodoCell(tableView: tableView, indexPath: indexPath)
     }
     
     
@@ -1006,3 +887,128 @@ extension ViewController {
         
     }
 }
+
+//MARK: - Helpers
+extension ViewController {
+    
+    
+    fileprivate func getRows(section: Int) -> [Post] {
+        let sectionString: String = sectionDates[section]
+        
+        // 섹션에 있는 날짜별로 행 반환
+        return groupingToDoList[sectionString] ?? []
+    }
+    
+    
+    fileprivate func makeTodoCell(tableView: UITableView,
+                              indexPath: IndexPath) -> UITableViewCell {
+        
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoCell", for: indexPath) as? ToDoCell else {
+            return UITableViewCell()
+        }
+            
+        print(#fileID, #function, #line, "- <# 주석 #>")
+        
+        //            if cell.label != nil {
+        //                print(#fileID, #function, #line, "- 레이블이 연결되었습니다.")
+        //            } else {
+        //                print(#fileID, #function, #line, "- 레이블이 연결되지 않았습니다!")
+        //            }
+        
+        //            let cellData: Post = toDoList[indexPath.row]
+        
+        cell.delegate = self
+        //            cell.clickedCheckDelegate = self
+        
+        // 날짜 가져오기
+        let sectionString = sectionDates[indexPath.section]
+        // 날짜별로 데이터 가져오기
+        
+        // posts 데이터 접근
+        if let posts = groupingToDoList[sectionString] {
+            print(#fileID, #function, #line, "- \(posts)")
+            // post 특정 행에 접근
+            let post = posts[indexPath.row]
+            print(#fileID, #function, #line, "- \(post)")
+            
+            selectDataIsChanged = post.isDone ?? false
+            
+            cell.indexPath = indexPath
+            cell.testIsDone = testIsDone
+            
+            cell.idLabel.text = "ID: \(post.id ?? 0)"
+            
+            
+            
+            
+            
+            // 제목 표시
+            if let title = post.title {
+                cell.label?.text = title
+            } else {
+                cell.label?.text = "제목 없음"
+            }
+            
+            // 취소선
+            if  post.isDone!{
+                cell.checkBtn.configuration?.baseForegroundColor = .black
+                // 취소선이 셀이 재사용되면서 여전히 남아버림. -> prepareForReuse에서 셀의 속성 초기화 작업할것
+                let strikeThroughTask = NSMutableAttributedString(string: cell.label.text ?? "")
+                strikeThroughTask.addAttributes([
+                    NSAttributedString.Key.strikethroughStyle: NSUnderlineStyle.single.rawValue,
+                    NSAttributedString.Key.strikethroughColor: UIColor.darkGray,
+                    NSAttributedString.Key.font : UIFont.systemFont(ofSize: 17.0)
+                ], range: NSMakeRange(0, strikeThroughTask.length))
+                cell.label?.attributedText = strikeThroughTask
+                
+            } else {
+                
+                cell.checkBtn.configuration?.baseForegroundColor = .lightGray
+                let originalString = cell.label.text ?? ""
+                let attributedString = NSMutableAttributedString(string: originalString)
+                attributedString.removeAttribute(NSAttributedString.Key.strikethroughStyle, range: NSMakeRange(0, attributedString.length))
+                attributedString.removeAttribute(NSAttributedString.Key.strikethroughColor, range: NSMakeRange(0, attributedString.length))
+                attributedString.addAttribute(NSAttributedString.Key.font, value: UIFont.systemFont(ofSize: 17.0), range: NSMakeRange(0, attributedString.length))
+                cell.label?.attributedText = attributedString
+                
+            }
+        
+
+            
+            // 날짜 표시
+            var time: String = ""
+            if var upDate = post.upDated {
+                
+                
+                print(#fileID, #function, #line, "- \(upDate)")
+                
+                upDate.removeLast()
+                
+                print(#fileID, #function, #line, "- \(upDate)")
+                
+                
+                let customDateFormatter = DateFormatter()
+                customDateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS"
+                
+                
+                if let date = customDateFormatter.date(from: upDate) {
+                    print(#fileID, #function, #line, "- \(date)")
+                    time = DateFormatter.localizedString(from: date ?? Date(), dateStyle: .long, timeStyle: .short)
+                } else {
+                    print(#fileID, #function, #line, "- 날짜 변환 실패")
+                }
+                
+                
+                cell.dateLabel?.text = time
+                
+            } else {
+                cell.dateLabel?.text = "시간 없음"
+            }
+            
+        }
+        
+        return cell
+        
+    }
+}
+
