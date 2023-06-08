@@ -759,7 +759,7 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, Sen
                     self.id = selectData?.id ?? 0
                     self.testIsDone = ((selectData?.isDone) != nil)
                     self.toDotitle = selectData?.title ?? ""
-                    self.toDoFinish = ((selectData?.isDone) != nil)
+                    
                 }
                 
                 

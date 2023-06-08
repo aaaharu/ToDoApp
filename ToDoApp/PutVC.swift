@@ -37,6 +37,7 @@ class PutVC: UIViewController {
         toDoTF.text = toDoTitle
         if let getBool = getBool {
             boolSwitch.isOn = getBool
+                print(#fileID, #function, #line, "- getBool \(getBool)")
         }
     }
 

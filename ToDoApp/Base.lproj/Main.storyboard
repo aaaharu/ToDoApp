@@ -248,7 +248,7 @@
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="bl6-fC-Nsa">
+                            <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" preferredStyle="sliding" translatesAutoresizingMaskIntoConstraints="NO" id="bl6-fC-Nsa">
                                 <rect key="frame" x="314" y="429.33333333333331" width="51" height="31"/>
                                 <connections>
                                     <action selector="boolSwitchClicked:" destination="F5E-s2-p8q" eventType="valueChanged" id="oNX-7t-kWX"/>
