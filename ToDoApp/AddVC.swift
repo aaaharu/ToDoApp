@@ -10,6 +10,8 @@ import UIKit
 
 class AddVC: UIViewController {
     
+    var toDoList: [Post] = []
+    
     var text: String = ""
     var finishBool: Bool = false
     var nowDate: String = ""
@@ -35,7 +37,7 @@ class AddVC: UIViewController {
     
     @IBAction func backBtnClicked(_ sender: UIBarButtonItem) {
         
-      
+        
         
     }
     
@@ -50,12 +52,12 @@ class AddVC: UIViewController {
     
     @IBAction func finishBtnCLicked(_ sender: UIButton) {
         
-        guard !(toDoTF.text?.isEmpty ?? false), toDoTF.text?.count ?? 0 > 0 else { return }
+        guard !(toDoTF.text?.isEmpty ?? false), toDoTF.text?.count ?? 0 > 5 else { return }
         
         text = toDoTF.text!
         
         // 현재 날짜/시간 생성
-            print(#fileID, #function, #line, "- text \(text)")
+        print(#fileID, #function, #line, "- text \(text)")
         let dateFormatter = DateFormatter()
         dateFormatter.locale = Locale(identifier: "ko_KR")
         dateFormatter.timeZone = TimeZone.current
@@ -63,37 +65,28 @@ class AddVC: UIViewController {
         dateFormatter.timeStyle = .short
         let dateString = dateFormatter.string(from: Date())
         
-            print(#fileID, #function, #line, "- dataString\(dateString)")
+        print(#fileID, #function, #line, "- dataString\(dateString)")
         
         nowDate = dateString
         
-        let addDataToSend: [AnyHashable: Any] = ["text": self.text, "bool": self.finishBool, "nowDate": self.nowDate]
-           
-            print(#fileID, #function, #line, "- addDataToSend \(addDataToSend)")
         
-        
-        closureFirst = {
-            NotificationCenter.default.post(name: Notification.Name("AddToDoList"), object: nil, userInfo: addDataToSend)
-        }
-        
-        closureFirst?()
         
         closureSecond = { [weak self] in guard let self = self else { return }
-                print(#fileID, #function, #line, "- 클로저가 실행되었따 ")
+            print(#fileID, #function, #line, "- 클로저가 실행되었따 ")
             self.callAddToDoListAPI(self.text, self.finishBool) {
-            
-        }
+                
+            }
         }
         
         closureSecond?()
-           
-    
+        
+        
         self.performSegue(withIdentifier: "AddVCBackToVC", sender: self)
         
         //노티 등록
         
-    
-           
+        
+        
         
     }
     
@@ -101,9 +94,9 @@ class AddVC: UIViewController {
     @IBAction fileprivate func boolSwitchClicked(_ sender: UISwitch) {
         
         finishBool.toggle()
-            print(#fileID, #function, #line, "- finishBool: \(finishBool)")
+        print(#fileID, #function, #line, "- finishBool: \(finishBool)")
         
-            }
+    }
     
     fileprivate func callAddToDoListAPI(_ title: String, _ is_done: Bool, _ completion: @escaping () -> Void) {
         
@@ -114,7 +107,7 @@ class AddVC: UIViewController {
         
         guard let url = URL(string: urlString) else { return }
         
-   
+        
         
         // JSON 데이터
         let priJsonData: [String: Any] = [
@@ -141,17 +134,44 @@ class AddVC: UIViewController {
                 print(#fileID, #function, #line, "- 할일 목록 추가 실패 \(error.localizedDescription)")
                 return
             }
+            guard let data = data else { return }
             
+            do {
+                    print(#fileID, #function, #line, "- do문 실해")
+                let todoResponse: ToDoItemResponse = try JSONDecoder().decode(ToDoItemResponse.self, from: data)
+                print(#fileID, #function, #line, "포스트\(todoResponse) ")
+                let todoData = todoResponse.data
+                self.nowDate = todoData?.created ?? ""
+                print(#fileID, #function, #line, "- toDoList \(String(describing: todoData))")
+            } catch {
+                print(#fileID, #function, #line, "- \(error)")
+            }
             guard let httpResponse = response as? HTTPURLResponse,
-                  httpResponse.statusCode == 200 else {
-
+                  httpResponse.statusCode == 200 || httpResponse.statusCode == 201 else {
+                
                 let httpResponse = response as? HTTPURLResponse
-                print(#fileID, #function, #line, "- 할일 목록 추가 실패(응답 코드: \(httpResponse?.statusCode)")
+                print(#fileID, #function, #line, "- 할일 목록 추가 실패(응답 코드: \(String(describing: httpResponse?.statusCode))")
                 return
             }
             
+            
             print(#fileID, #function, #line, "- 할 일 목록 추가 성공(응답)")
-        
+            
+            
+            let addDataToSend: [AnyHashable: Any] = ["text": self.text, "bool": self.finishBool, "nowDate": self.nowDate]
+            
+            print(#fileID, #function, #line, "- addDataToSend \(addDataToSend)")
+            
+            
+            
+            self.closureFirst = {
+                DispatchQueue.main.async {
+                    NotificationCenter.default.post(name: Notification.Name("AddToDoList"), object: nil, userInfo: addDataToSend)
+                }
+                
+            }
+            
+            self.closureFirst?()
             
             
         }

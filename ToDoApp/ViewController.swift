@@ -9,6 +9,8 @@ import SwipeCellKit
 import UIKit
 class ViewController: UIViewController {
     
+    var isSearchFunctionCalled = false
+    
     var completionClosure: (() -> Void)?
 
     var putReceiveData: (id: Int, text: String, boolValue: Bool)?
@@ -232,22 +234,29 @@ class ViewController: UIViewController {
     fileprivate func makeAddToDoList(_ title: String, _  isDone: Bool, _ nowDate: String) {
             print(#fileID, #function, #line, "- <# 주석 #>")
         
-        guard let mostRecentItemID = toDoList.first?.id
+        guard var mostRecentItemID = toDoList.first?.id
                 
                 else { return }
         
         
         print(#fileID, #function, #line, "- 최신 아이디 \(mostRecentItemID)")
         
-        var newPost = Post(upDated: nowDate)
+        var newPost = Post(upDated: nowDate, created: nowDate)
         newPost.title = title
         newPost.isDone = isDone
         newPost.id = mostRecentItemID + 1
- 
+        mostRecentItemID = 0
+        
         toDoList.append(newPost)
+        // 아이디 값 내림차순으로 정렬
+        toDoList.sort(by: { $0.id ?? 0 > $1.id ?? 0 })
         
         makeSection()
-        myTableView.reloadData()
+        
+        DispatchQueue.main.async {
+            self.myTableView.reloadData()
+        }
+        
         
             print(#fileID, #function, #line, "- 추가된 toDo목록 \(toDoList)")
         
@@ -273,8 +282,7 @@ class ViewController: UIViewController {
     // MARK: -  PutVC로 데이터 보내기
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         print(#fileID, #function, #line, "- <# 주석 #>")
-        
-        print(#fileID, #function, #line, "- 아이디 보낸다 받아라")
+      
         
         
         if segue.identifier == "NavtoPutVC" {
@@ -302,8 +310,18 @@ class ViewController: UIViewController {
     @objc fileprivate func searchBarInput(_ searchTextField: UITextField) {
         print(#fileID, #function, #line, "- <# 주석 #>")
         
+        var inputText: String?
+        
+        DispatchQueue.main.async {
+            inputText = searchTextField.text
+        }
+        
         let urlQuery: String? = encodeKoreanToURL(searchTextField.text ?? "")
         
+        // 함수가 한번 이상 호출되었다
+        isSearchFunctionCalled = true
+        
+       
         if let query = urlQuery {
             
             // 검색어가 입력되면 기존 작업 취소
@@ -314,7 +332,13 @@ class ViewController: UIViewController {
                 DispatchQueue.global(qos: .userInteractive).async {
                     print(#fileID, #function, #line, "- 검색 API 호출하기 userInput: (searchTextField)")
                     
-                    self.callSearchGET(query)
+                    if self.isSearchFunctionCalled && inputText?.isEmpty == true {
+                        // 함수가 한번 이상 호출된 후에 수행할 동작
+                            print(#fileID, #function, #line, "- 두개의 조건 만족")
+                        self.getToDoMethod()
+                    } else {
+                        self.callSearchGET(query)
+                    }
                 }
             })
             
@@ -523,6 +547,7 @@ class ViewController: UIViewController {
                 
                 
                 self.toDoList = todoResponse.data
+                
                 
                 self.makeSection()
                 

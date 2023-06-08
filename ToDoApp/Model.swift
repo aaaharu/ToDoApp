@@ -35,11 +35,13 @@ struct Post: Decodable {
     var title: String?
     var isDone: Bool?
     let upDated: String?
+    let created: String?
     
     enum CodingKeys: String, CodingKey {
-        case id
-        case title
+        case id = "id"
+        case title = "title"
         case isDone = "is_done"
+        case created = "created_at"
         case upDated = "updated_at"
     }
 //    let xml: XML?
