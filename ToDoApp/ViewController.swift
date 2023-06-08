@@ -11,8 +11,7 @@ class ViewController: UIViewController {
     
     var completionClosure: (() -> Void)?
 
-    var receiveData: (id: Int, text: String, boolValue: Bool)?
-    
+    var putReceiveData: (id: Int, text: String, boolValue: Bool)?
 
     // MARK: - 데이터 담아서 putVC에 보내주기
     // 아이디, title, finish
@@ -69,8 +68,8 @@ class ViewController: UIViewController {
         getToDoMethod()
         sectionHeight()
         
-        // 노티 - (발신:addVC) 할일 목록 추가시 reCallGetMethod 수신기 등록
-        NotificationCenter.default.addObserver(self, selector: #selector(reCallGetTodo), name: Notification.Name("CustomNotification"), object: nil)
+//         노티 - (발신:addVC) 할일 목록 추가시 reCallGetMethod 수신기 등록
+        NotificationCenter.default.addObserver(self, selector: #selector(receiveDataFromAddVC), name: Notification.Name("AddToDoList"), object: nil)
         
         // 노티 - (발신:ToDocell) 체크버튼 클릭시 완료 상태 변경 수신기 등록
         NotificationCenter.default.addObserver(self, selector: #selector(checkBtnClickedboolChanged), name: Notification.Name("toggleBoolBtn") , object: nil)
@@ -230,20 +229,43 @@ class ViewController: UIViewController {
         
     }
     
+    fileprivate func makeAddToDoList(_ title: String, _  isDone: Bool, _ nowDate: String) {
+            print(#fileID, #function, #line, "- <# 주석 #>")
+        
+        guard let mostRecentItemID = toDoList.first?.id
+                
+                else { return }
+        
+        
+        print(#fileID, #function, #line, "- 최신 아이디 \(mostRecentItemID)")
+        
+        var newPost = Post(upDated: nowDate)
+        newPost.title = title
+        newPost.isDone = isDone
+        newPost.id = mostRecentItemID + 1
+ 
+        toDoList.append(newPost)
+        
+        makeSection()
+        myTableView.reloadData()
+        
+            print(#fileID, #function, #line, "- 추가된 toDo목록 \(toDoList)")
+        
+    }
     // MARK: - unwindSegue
     
     @IBAction func backToVC(unwindSegue: UIStoryboardSegue) {
         print(#fileID, #function, #line, "- unwind")
         
-        
+
         if let sourceVC = unwindSegue.source as? PutVC,
            let data = sourceVC.dataToSend as? (id: Int, text: String, boolValue: Bool) {
-            receiveData = data
+            putReceiveData = data
             
-            print(#fileID, #function, #line, "- \(String(describing: receiveData))")
+            print(#fileID, #function, #line, "- \(String(describing: putReceiveData))")
         }
         
-        callPutMethod(receiveData?.text ?? "", receiveData?.boolValue) {}
+       
         
         
     }
@@ -307,9 +329,32 @@ class ViewController: UIViewController {
         
     }
     
+    @objc func receiveDataFromAddVC(_ notification: Notification) {
+        
+            print(#fileID, #function, #line, "- 노티에서 데이터를 받아옵니다.")
+        print(#fileID, #function, #line, "- \(String(describing: notification.userInfo))")
+        
+        if let userInfo = notification.userInfo,
+        let text = userInfo["text"] as? String,
+        let bool = userInfo["bool"] as? Bool,
+        let nowDate =  userInfo["nowDate"] as? String
+           
+        {
+                print(#fileID, #function, #line, "- \(text), \(bool), \(nowDate)")
+
+           
+                print(#fileID, #function, #line, "- makeAddToDoList가 이제 곧 호출됩니다.")
+            makeAddToDoList(text, bool, nowDate)
+            
+            
+        }
+        
+        
+    }
+    
     
     @objc func reCallGetTodo() {
-        print(#fileID, #function, #line, "-  주석 ")
+        print(#fileID, #function, #line, "- get메서드가 호출되었다.")
         
         let urlString: String = "https://phplaravel-574671-2962113.cloudwaysapps.com/api/v1/todos?page=1&order_by=desc&per_page=10"
         
@@ -336,7 +381,7 @@ class ViewController: UIViewController {
                 
                 // 섹션으로 정리한 배열 메서드 불러오기
                 self.makeSection()
-                
+                print(#fileID, #function, #line, "- 데이터 테스트 \(self.toDoList)")
                 
                 DispatchQueue.main.async {
                     

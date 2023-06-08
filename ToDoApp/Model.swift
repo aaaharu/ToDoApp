@@ -32,7 +32,7 @@ struct ToDoResponse: Decodable {
 // MARK: - Post
 struct Post: Decodable {
     var id: Int?
-    let title: String?
+    var title: String?
     var isDone: Bool?
     let upDated: String?
     
