@@ -269,7 +269,17 @@ class ViewController: UIViewController {
 
         if let sourceVC = unwindSegue.source as? PutVC,
            let data = sourceVC.dataToSend as? (id: Int, text: String, boolValue: Bool) {
-            putReceiveData = data
+            
+            if let putItemIndex = toDoList.firstIndex(where: { $0.id == data.id }) {
+                toDoList[putItemIndex].title = data.text
+                toDoList[putItemIndex].isDone = data.boolValue
+                
+            }
+            
+            makeSection()
+            
+            
+
             
             print(#fileID, #function, #line, "- \(String(describing: putReceiveData))")
         }
