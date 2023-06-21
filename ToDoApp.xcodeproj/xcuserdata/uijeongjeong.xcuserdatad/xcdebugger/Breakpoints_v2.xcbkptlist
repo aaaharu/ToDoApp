@@ -3,4 +3,54 @@
    uuid = "F6EC0126-7DEF-454C-9CF5-5066DACD32CE"
    type = "1"
    version = "2.0">
+   <Breakpoints>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "DF1A0ABD-FC85-48B9-BE05-FF3A1F65E68E"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "ToDoApp/ViewController.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "92"
+            endingLineNumber = "92"
+            landmarkName = "viewDidLoad()"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "DF1A0ABD-FC85-48B9-BE05-FF3A1F65E68E - 785d55ca5aaaac05"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #1 (Swift.Optional&lt;Swift.Array&lt;ToDoApp.Post&gt;&gt;, Swift.Optional&lt;ToDoApp.MyError&gt;) -&gt; () in ToDoApp.ViewController.viewDidLoad() -&gt; ()"
+                  moduleName = "ToDoApp"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/uijeongjeong/Downloads/ToDoApp-9/ToDoApp/ViewController.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "92"
+                  endingLineNumber = "92"
+                  offsetFromSymbolStart = "492">
+               </Location>
+               <Location
+                  uuid = "DF1A0ABD-FC85-48B9-BE05-FF3A1F65E68E - 785d55ca5aaaa3e4"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #1 (Swift.Optional&lt;Swift.Array&lt;ToDoApp.Post&gt;&gt;, Swift.Optional&lt;ToDoApp.MyError&gt;) -&gt; () in ToDoApp.ViewController.viewDidLoad() -&gt; ()"
+                  moduleName = "ToDoApp"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/uijeongjeong/Downloads/ToDoApp-9/ToDoApp/ViewController.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "93"
+                  endingLineNumber = "93"
+                  offsetFromSymbolStart = "492">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+   </Breakpoints>
 </Bucket>

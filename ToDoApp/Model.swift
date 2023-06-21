@@ -7,8 +7,6 @@
 
 import Foundation
 
-
-
 struct ItemResponse<T: Decodable>: Decodable {
     let data: T?
     let message: String?

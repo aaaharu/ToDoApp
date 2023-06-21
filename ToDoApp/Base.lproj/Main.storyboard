@@ -55,11 +55,31 @@
                                     <segue destination="HBy-y9-BG2" kind="push" id="oVE-xj-pUd"/>
                                 </connections>
                             </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="vzF-jV-Ig3">
+                                <rect key="frame" x="40" y="730" width="44" height="44"/>
+                                <color key="backgroundColor" systemColor="systemBrownColor"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="46" id="Ydw-8J-TII"/>
+                                    <constraint firstAttribute="width" secondItem="vzF-jV-Ig3" secondAttribute="height" multiplier="1:1" id="fGa-QP-QXc"/>
+                                </constraints>
+                                <color key="tintColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <state key="normal" title="Button"/>
+                                <buttonConfiguration key="configuration" style="filled" image="Trash">
+                                    <color key="baseForegroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                    <color key="baseBackgroundColor" systemColor="labelColor"/>
+                                </buttonConfiguration>
+                                <connections>
+                                    <action selector="trashBtnClicked:" destination="BYZ-38-t0r" eventType="touchUpInside" id="j54-Lz-GXZ"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
+                            <constraint firstItem="vzF-jV-Ig3" firstAttribute="top" secondItem="OIy-KD-96o" secondAttribute="bottom" constant="12" id="1nv-hd-Fzn"/>
+                            <constraint firstItem="16q-Bb-YdF" firstAttribute="leading" secondItem="vzF-jV-Ig3" secondAttribute="trailing" constant="235" id="CAN-bC-joe"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="83d-MZ-75T" secondAttribute="trailing" id="M9y-n9-pYy"/>
+                            <constraint firstItem="vzF-jV-Ig3" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="40" id="MBY-8I-QCm"/>
                             <constraint firstItem="83d-MZ-75T" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" id="PPk-MB-lpd"/>
                             <constraint firstItem="83d-MZ-75T" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" id="Q4n-2n-F1s"/>
                             <constraint firstItem="16q-Bb-YdF" firstAttribute="top" secondItem="83d-MZ-75T" secondAttribute="bottom" constant="15" id="R8w-Sm-SHi"/>
@@ -71,12 +91,14 @@
                         <outlet property="myTableView" destination="OIy-KD-96o" id="vPQ-02-buz"/>
                         <outlet property="plusBtn" destination="16q-Bb-YdF" id="0dX-La-TUj"/>
                         <outlet property="searchBar" destination="yQ4-vT-psU" id="Icl-om-N6v"/>
+                        <outlet property="trashStore" destination="vzF-jV-Ig3" id="v45-1Q-8lh"/>
                         <segue destination="F5E-s2-p8q" kind="push" identifier="NavtoPutVC" id="aab-FH-osN"/>
+                        <segue destination="xgS-Db-BhQ" kind="show" identifier="NavToTrashVC" id="uGm-tA-lDE"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1144" y="-44"/>
+            <point key="canvasLocation" x="1050" y="-256"/>
         </scene>
         <!--AddVC-->
         <scene sceneID="eYV-We-IDE">
@@ -205,6 +227,39 @@
             </objects>
             <point key="canvasLocation" x="113.74045801526717" y="-27.464788732394368"/>
         </scene>
+        <!--Trash DataVC-->
+        <scene sceneID="hDD-Oz-Llr">
+            <objects>
+                <viewController storyboardIdentifier="TrashDataVC" useStoryboardIdentifierAsRestorationIdentifier="YES" id="xgS-Db-BhQ" customClass="TrashDataVC" customModule="ToDoApp" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="CLk-xh-6ge">
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="Y33-kC-oB0">
+                                <rect key="frame" x="0.0" y="129" width="393" height="605"/>
+                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                            </tableView>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="7wy-tA-uoK"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="7wy-tA-uoK" firstAttribute="trailing" secondItem="Y33-kC-oB0" secondAttribute="trailing" id="AM6-iG-hQu"/>
+                            <constraint firstItem="Y33-kC-oB0" firstAttribute="leading" secondItem="7wy-tA-uoK" secondAttribute="leading" id="KjX-27-7lK"/>
+                            <constraint firstItem="7wy-tA-uoK" firstAttribute="bottom" secondItem="Y33-kC-oB0" secondAttribute="bottom" constant="84" id="Yyg-Ov-Or0"/>
+                            <constraint firstItem="Y33-kC-oB0" firstAttribute="top" secondItem="7wy-tA-uoK" secondAttribute="top" constant="26" id="qCm-pi-rGN"/>
+                        </constraints>
+                    </view>
+                    <navigationItem key="navigationItem" id="hAx-1O-0Mm"/>
+                    <connections>
+                        <outlet property="myTableView" destination="Y33-kC-oB0" id="3gg-7N-fpg"/>
+                        <segue destination="Gkp-IK-txL" kind="unwind" identifier="BackToFirstVC" unwindAction="backToVCWithUnwindSegue:" id="dWe-Y4-Mkf"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="BNn-BQ-Luk" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+                <exit id="Gkp-IK-txL" userLabel="Exit" sceneMemberID="exit"/>
+            </objects>
+            <point key="canvasLocation" x="113.74045801526717" y="719.71830985915494"/>
+        </scene>
         <!--PutVC-->
         <scene sceneID="2aI-qB-FfE">
             <objects>
@@ -308,13 +363,20 @@
                 <placeholder placeholderIdentifier="IBFirstResponder" id="8oj-ca-UVz" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
                 <exit id="xQr-ti-VlE" userLabel="Exit" sceneMemberID="exit"/>
             </objects>
-            <point key="canvasLocation" x="1466" y="680"/>
+            <point key="canvasLocation" x="1540" y="694"/>
         </scene>
     </scenes>
     <resources>
+        <image name="Trash" width="20" height="28"/>
         <image name="plus" catalog="system" width="128" height="113"/>
+        <systemColor name="labelColor">
+            <color red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </systemColor>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+        <systemColor name="systemBrownColor">
+            <color red="0.63529411764705879" green="0.51764705882352946" blue="0.36862745098039218" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
         <systemColor name="systemGray5Color">
             <color red="0.89803921568627454" green="0.89803921568627454" blue="0.91764705882352937" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>

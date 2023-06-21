@@ -7,14 +7,35 @@
 
 import SwipeCellKit
 import UIKit
+
+enum MyError: Error {
+    case unknownError(err: Error?)
+    case serverError(code: Int)
+    case noData
+    case notAllowedUrl
+    
+    //
+    var errInfo : String {
+        switch self {
+        case .noData:                   return "데이터가 없습니다"
+        case .notAllowedUrl:            return "허용되지 않는 URL 입니다"
+        case .serverError(let code):    return "서버에러 입니다 : code : \(code)"
+        case .unknownError(let err):
+            let nsError = err as? NSError
+            return "알 수 없는 에러 : \(nsError?.code ?? 999)"
+        }
+    }
+}
+
+
 class ViewController: UIViewController {
     
     var isSearchFunctionCalled = false
     
     var completionClosure: (() -> Void)?
-
+    
     var putReceiveData: (id: Int, text: String, boolValue: Bool)?
-
+    
     // MARK: - 데이터 담아서 putVC에 보내주기
     // 아이디, title, finish
     var id: Int = 0
@@ -25,10 +46,6 @@ class ViewController: UIViewController {
     var selectDataIsChanged: Bool =  false
     var testIsDone: Bool = false
     
-
-    
-
-    
     // 섹션을 위해 데이터를 날짜 순으로 그룹화
     var groupingToDoList: [String: [Post]] = [:]
     var sectionDates: [String] = []
@@ -37,22 +54,20 @@ class ViewController: UIViewController {
     // 검색 작업 아이템
     var searchDispatchWorkItem : DispatchWorkItem? = nil
     
+    @IBOutlet weak var trashStore: UIButton!
     @IBOutlet weak var plusBtn: UIButton!
-    
     @IBOutlet weak var hiddenFinishBtn: UIButton!
-    
     @IBOutlet weak var searchBar: UISearchBar!
     @IBOutlet weak var myTableView: UITableView!
     
     var toDoList: [Post] = []
+    var deleteToDoList: [Post] = []
+    
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        
         myTableView.reloadData()
-        
-        
     }
     
     
@@ -67,10 +82,32 @@ class ViewController: UIViewController {
         let nib = UINib(nibName: "ToDoCell", bundle: .main)
         myTableView.register(nib, forCellReuseIdentifier: "ToDoCell")
         setupUI()
+       
         getToDoMethod()
-        sectionHeight()
         
-//         노티 - (발신:addVC) 할일 목록 추가시 reCallGetMethod 수신기 등록
+        getToDoMethodWithError(completion: { [weak self] fetchedTodos, error in
+            guard let self = self else { return }
+            if let myErr : MyError = error {
+//                self.handleErr(myErr)
+                
+                Utils.shared.showErrAlert(parentVC: self, myErr)
+                return
+            }
+            
+            guard let fetchedTodos = fetchedTodos else { return }
+            
+            self.toDoList = fetchedTodos
+        
+            self.makeSection()
+        
+            DispatchQueue.main.async {
+                self.myTableView.reloadData()
+            }
+            
+        })
+        
+        sectionHeight()
+        //         노티 - (발신:addVC) 할일 목록 추가시 reCallGetMethod 수신기 등록
         NotificationCenter.default.addObserver(self, selector: #selector(receiveDataFromAddVC), name: Notification.Name("AddToDoList"), object: nil)
         
         // 노티 - (발신:ToDocell) 체크버튼 클릭시 완료 상태 변경 수신기 등록
@@ -83,67 +120,100 @@ class ViewController: UIViewController {
         
     }
     
+    
+    /// 에러처리
+    /// - Parameter myErr: <#myErr description#>
+    fileprivate func handleErr(_ myErr: MyError) {
+        print(#fileID, #function, #line, "- myErr:\(myErr.errInfo)")
+        
+        
+//        Utils.shared.showErrAlert(parentVC: <#T##UIViewController#>, <#T##myErr: MyError##MyError#>)
+//        showErrAlert(myErr)
+        
+        switch myErr {
+        case .unknownError(let err):
+            print(#fileID, #function, #line, "- ")
+        case .serverError(let code):
+            print(#fileID, #function, #line, "- ")
+        case .noData:
+            print(#fileID, #function, #line, "- ")
+        case .notAllowedUrl:
+            print(#fileID, #function, #line, "- ")
+        }
+    }
+    
+//    private func showErrAlert(_ myErr: MyError){
+//        let alert = UIAlertController(title: "에러", message: myErr.errInfo, preferredStyle: .alert)
+//        alert.addAction(UIAlertAction(title: NSLocalizedString("확인", comment: "Default action"), style: .default, handler: { _ in
+//        NSLog("The \"OK\" alert occured.")
+//        }))
+//        self.present(alert, animated: true, completion: nil)
+//    }
+    
     @objc fileprivate func checkBtnClickedboolChanged(_ notification: Notification) {
-            print(#fileID, #function, #line, "- <# 주석 #>")
-          
-            if let data = notification.userInfo as? [String: Any] {
+        print(#fileID, #function, #line, "- <# 주석 #>")
+        
+        if let data = notification.userInfo as? [String: Any] {
+            
+            let indexPath = data["indexPath"] as? IndexPath
+            print(#fileID, #function, #line, "- 받아온 indexPath \(String(describing: indexPath))")
+            
+            guard let indexPath = indexPath else { return }
+            
+            // 날짜 가져오기
+            let sectionString = sectionDates[indexPath.section]
+            // 날짜별로 데이터 가져오기
+            // posts 데이터 접근
+            if let posts = groupingToDoList[sectionString] {
+                print(#fileID, #function, #line, "- \(posts)")
+                // post 특정 행에 접근
+                var post = posts[indexPath.row]
+                print(#fileID, #function, #line, "- \(String(describing: post.isDone))")
                 
-                let indexPath = data["indexPath"] as? IndexPath
-                print(#fileID, #function, #line, "- 받아온 indexPath \(String(describing: indexPath))")
+                post.id = self.id
                 
-                guard let indexPath = indexPath else { return }
+                post.isDone = !post.isDone!
+                // regrouping을 해줄 때 셀을 숨길 때 필요한 데이터
+                toDoList[indexPath.row].isDone = post.isDone
                 
-                // 날짜 가져오기
-                 let sectionString = sectionDates[indexPath.section]
-                // 날짜별로 데이터 가져오기
-                // posts 데이터 접근
-                if let posts = groupingToDoList[sectionString] {
-                    print(#fileID, #function, #line, "- \(posts)")
-                    // post 특정 행에 접근
-                    var post = posts[indexPath.row]
-                    print(#fileID, #function, #line, "- \(String(describing: post.isDone))")
+                groupingToDoList[sectionString]?[indexPath.row].isDone = post.isDone
+                
+                
+                let sendBoolValueArray = ["bool": post.isDone, "indexPath": indexPath] as [String : Any]
+                
+                print(#fileID, #function, #line, "여기에서 확인해보자 \(groupingToDoList) ")
+                
+                NotificationCenter.default.post(name: Notification.Name("VCsendBoolValue"), object: nil,userInfo: sendBoolValueArray as [AnyHashable : Any])
+                
+                
+                print(#fileID, #function, #line, "- \(String(describing: post.isDone))")
+                
+                completionClosure = { [weak self] in
+                    guard let self = self else { return }
+                    print(#fileID, #function, #line, "- 클로저가 실행되었다.\(String(describing: post.title))")
                     
-                    post.id = self.id
-                    
-                    post.isDone = !post.isDone!
-                    // regrouping을 해줄 때 셀을 숨길 때 필요한 데이터
-                    toDoList[indexPath.row].isDone = post.isDone
-                    
-                    groupingToDoList[sectionString]?[indexPath.row].isDone = post.isDone
-                    
-                    
-                    let sendBoolValueArray = ["bool": post.isDone, "indexPath": indexPath] as [String : Any]
-                    
-                        print(#fileID, #function, #line, "여기에서 확인해보자 \(groupingToDoList) ")
-                    
-                    NotificationCenter.default.post(name: Notification.Name("VCsendBoolValue"), object: nil,userInfo: sendBoolValueArray as [AnyHashable : Any])
-                    
-                    
-                    print(#fileID, #function, #line, "- \(String(describing: post.isDone))")
-                    
-                    completionClosure = { [weak self] in
-                        guard let self = self else { return }
-                        print(#fileID, #function, #line, "- 클로저가 실행되었다.\(String(describing: post.title))")
+                    self.callPutMethod(post.title, post.isDone) {
                         
-                        self.callPutMethod(post.title, post.isDone) {
-                            
-                            
                         
-                        }
                         
                     }
-                    completionClosure?()
-                    
                     
                 }
+                completionClosure?()
+                
+                
             }
-            
-            
-            
         }
+        
+        
+        
+    }
     
-
+    
     // MARK: - 데이터
+    // 휴지통
+    
+    
     
     // 완료 숨기기 - 데이터 섹션별로 정렬
     fileprivate func reMakeSection(_ grouping: [Post]){
@@ -201,42 +271,42 @@ class ViewController: UIViewController {
         guard let titleString = sender.titleLabel?.text else { return }
         
         print(#fileID, #function, #line, "- \(titleString)")
-  
-
+        
+        
         
         if titleString == "완료 숨기기" {
             // isDone == true이면 숨기기
             // false만 데이터 배열에 다시 넣기, 섹션으로 묶기, 테이블뷰 다시 불러오기
-           
-//        let groupingPostMap = groupingToDoList.map{ $1 }.flatMap{ $0 }
-        let reGrouping = toDoList.filter{ !($0.isDone ?? false) }
-                print(#fileID, #function, #line, "- regrouping\(reGrouping)")
+            
+            //        let groupingPostMap = groupingToDoList.map{ $1 }.flatMap{ $0 }
+            let reGrouping = toDoList.filter{ !($0.isDone ?? false) }
+            print(#fileID, #function, #line, "- regrouping\(reGrouping)")
             reMakeSection(reGrouping)
             
             myTableView.reloadData()
             sender.setTitle("전체보기", for: .normal)
-        
+            
             
             
         } else {
             
             makeSection()
             myTableView.reloadData()
-           
+            
             // isDone == true 숨기기 취소
             // 데이터 배열 다시 로드(get호출), 섹션으로 묶기
-           
+            
             sender.setTitle("완료 숨기기", for: .normal)
         }
         
     }
     
     fileprivate func makeAddToDoList(_ title: String, _  isDone: Bool, _ nowDate: String) {
-            print(#fileID, #function, #line, "- <# 주석 #>")
+        print(#fileID, #function, #line, "- <# 주석 #>")
         
         guard var mostRecentItemID = toDoList.first?.id
                 
-                else { return }
+        else { return }
         
         
         print(#fileID, #function, #line, "- 최신 아이디 \(mostRecentItemID)")
@@ -256,17 +326,43 @@ class ViewController: UIViewController {
         DispatchQueue.main.async {
             self.myTableView.reloadData()
         }
-        
-        
-            print(#fileID, #function, #line, "- 추가된 toDo목록 \(toDoList)")
-        
+        print(#fileID, #function, #line, "- 추가된 toDo목록 \(toDoList)")
     }
     // MARK: - unwindSegue
+    
+    
+    @IBAction func trashBtnClicked(_ sender: Any) {
+        print(#fileID, #function, #line, "- <# 주석 #>")
+        self.performSegue(withIdentifier: "NavToTrashVC", sender: self)
+    }
     
     @IBAction func backToVC(unwindSegue: UIStoryboardSegue) {
         print(#fileID, #function, #line, "- unwind")
         
-
+        if let trashVC = unwindSegue.source as? TrashDataVC {
+            self.toDoList.append(contentsOf: trashVC.getDeleteList)
+            self.deleteToDoList.removeAll()
+            
+            makeSection()
+            DispatchQueue.main.async {
+                self.myTableView.reloadData()
+            }
+            
+            var deleteListCount = trashVC.getDeleteList.count
+            
+            // 복원한 데이터 POST로 다시 등록 해주기
+            for i in 0..<deleteListCount {
+    
+                let title = trashVC.getDeleteList[i].title
+                let isDone = trashVC.getDeleteList[i].isDone
+                callPutMethod(title, isDone) {
+                    self.getToDoMethod()
+                }
+            }
+            
+        }
+        
+        
         if let sourceVC = unwindSegue.source as? PutVC,
            let data = sourceVC.dataToSend as? (id: Int, text: String, boolValue: Bool) {
             
@@ -279,12 +375,12 @@ class ViewController: UIViewController {
             makeSection()
             
             
-
+            
             
             print(#fileID, #function, #line, "- \(String(describing: putReceiveData))")
         }
         
-       
+        
         
         
     }
@@ -292,7 +388,19 @@ class ViewController: UIViewController {
     // MARK: -  PutVC로 데이터 보내기
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         print(#fileID, #function, #line, "- <# 주석 #>")
-      
+        
+        
+        if segue.identifier == "NavToTrashVC" {
+            
+            if let trashVC = segue.destination as? TrashDataVC {
+                
+                print(#fileID, #function, #line, "- 쓰레기통 데이터 보내기")
+                trashVC.getDeleteList = deleteToDoList
+                
+            }
+            
+            
+        }
         
         
         if segue.identifier == "NavtoPutVC" {
@@ -331,7 +439,7 @@ class ViewController: UIViewController {
         // 함수가 한번 이상 호출되었다
         isSearchFunctionCalled = true
         
-       
+        
         if let query = urlQuery {
             
             // 검색어가 입력되면 기존 작업 취소
@@ -344,7 +452,7 @@ class ViewController: UIViewController {
                     
                     if self.isSearchFunctionCalled && inputText?.isEmpty == true {
                         // 함수가 한번 이상 호출된 후에 수행할 동작
-                            print(#fileID, #function, #line, "- 두개의 조건 만족")
+                        print(#fileID, #function, #line, "- 두개의 조건 만족")
                         self.getToDoMethod()
                     } else {
                         self.callSearchGET(query)
@@ -365,27 +473,22 @@ class ViewController: UIViewController {
     
     @objc func receiveDataFromAddVC(_ notification: Notification) {
         
-            print(#fileID, #function, #line, "- 노티에서 데이터를 받아옵니다.")
+        print(#fileID, #function, #line, "- 노티에서 데이터를 받아옵니다.")
         print(#fileID, #function, #line, "- \(String(describing: notification.userInfo))")
         
         if let userInfo = notification.userInfo,
-        let text = userInfo["text"] as? String,
-        let bool = userInfo["bool"] as? Bool,
-        let nowDate =  userInfo["nowDate"] as? String
-           
+           let text = userInfo["text"] as? String,
+           let bool = userInfo["bool"] as? Bool,
+           let nowDate =  userInfo["nowDate"] as? String
+            
         {
-                print(#fileID, #function, #line, "- \(text), \(bool), \(nowDate)")
-
-           
-                print(#fileID, #function, #line, "- makeAddToDoList가 이제 곧 호출됩니다.")
+            print(#fileID, #function, #line, "- \(text), \(bool), \(nowDate)")
+            
+            
+            print(#fileID, #function, #line, "- makeAddToDoList가 이제 곧 호출됩니다.")
             makeAddToDoList(text, bool, nowDate)
-            
-            
         }
-        
-        
     }
-    
     
     @objc func reCallGetTodo() {
         print(#fileID, #function, #line, "- get메서드가 호출되었다.")
@@ -510,29 +613,76 @@ class ViewController: UIViewController {
         
         URLSession.shared.dataTask(with: urlReuqest) { data, response, error in
             
-            
             guard let data = data else { return }
-            //
-            //            if let jsonString = String(data: data, encoding: .utf8) {
-            //                    print(#fileID, #function, #line, "- \(jsonString)")
-            //            }
             do {
-                
                 let todoResponse: ItemResponse<Post> = try JSONDecoder().decode(ItemResponse<Post>.self, from: data)
                 print(#fileID, #function, #line, "포스트\(todoResponse) ")
-                
                 completion()
-                
             } catch {
                 print(#fileID, #function, #line, "- \(error)")
             }
-            
-            
-            
         }.resume()
         
     }
     
+//    self.toDoList = todoResponse.data
+//
+//    self.makeSection()
+//
+//    DispatchQueue.main.async {
+//        self.myTableView.reloadData()
+//    }
+    
+    // PostList 가져올 것
+    fileprivate func getToDoMethodWithError(completion: @escaping ([Post]?, MyError?) -> Void) {
+        print(#fileID, #function, #line, "-  주석 ")
+        
+        let urlString: String = "https://phplaravel-574671-2962113.cloudwaysapps.com/api/v1/todos?page=1&order_by=desc&per_page=10"
+        
+        guard let url = URL(string: urlString) else {
+            completion(nil, MyError.notAllowedUrl)
+            return
+        }
+        
+        let urlReuqest = URLRequest(url: url)
+        URLSession.shared.dataTask(with: urlReuqest) { data, response, error in
+            
+            if let error : Error = error {
+                completion(nil, MyError.unknownError(err: error))
+                return
+            }
+            
+            if let httpResponse = response as? HTTPURLResponse {
+                let code = httpResponse.statusCode
+                if !(200...299).contains(code) {
+                    print(#fileID, #function, #line, "- 코드에러 입니다")
+                    completion(nil, MyError.serverError(code: code))
+                    return
+                }
+            }
+            
+            guard let data = data else { return }
+            do {
+                let todoResponse: ToDoResponse = try JSONDecoder().decode(ToDoResponse.self, from: data)
+                print(#fileID, #function, #line, "포스트\(todoResponse) ")
+                
+                let fetchedTodos = todoResponse.data
+                
+                completion(nil, MyError.noData)
+                
+//                if fetchedTodos.count > 1 {
+//                    completion(todoResponse.data, nil)
+//                } else {
+//                    completion(nil, MyError.noData)
+//                }
+                
+            } catch {
+                print(#fileID, #function, #line, "- \(error)")
+                completion(nil, MyError.unknownError(err: error))
+            }
+            
+        }.resume()
+    }
     
     fileprivate func getToDoMethod() {
         print(#fileID, #function, #line, "-  주석 ")
@@ -544,49 +694,43 @@ class ViewController: UIViewController {
         let urlReuqest = URLRequest(url: url)
         URLSession.shared.dataTask(with: urlReuqest) { data, response, error in
             
+            if error != nil {
+                return
+            }
+            
+            if let httpResponse = response as? HTTPURLResponse {
+                let code = httpResponse.statusCode
+                if !(200...299).contains(code) {
+                    print(#fileID, #function, #line, "- 코드에러 입니다")
+                    return
+                }
+            }
             
             guard let data = data else { return }
-            //
-            //            if let jsonString = String(data: data, encoding: .utf8) {
-            //                    print(#fileID, #function, #line, "- \(jsonString)")
-            //            }
             do {
-                
                 let todoResponse: ToDoResponse = try JSONDecoder().decode(ToDoResponse.self, from: data)
                 print(#fileID, #function, #line, "포스트\(todoResponse) ")
                 
-                
                 self.toDoList = todoResponse.data
-                
                 
                 self.makeSection()
                 
-                
                 DispatchQueue.main.async {
                     self.myTableView.reloadData()
-                    
-                    
-                    
                 }
-                
-                
             } catch {
                 print(#fileID, #function, #line, "- \(error)")
             }
             
         }.resume()
-        
-        
-        
-        
     }
     
-    fileprivate func callPutMethod(_ putToDoTitle: String?, _ is_done: Bool?, completion: @escaping () -> Void){
+    fileprivate func callPutMethod(_ putToDoTitle: String?, _ is_done: Bool?, completion: @escaping () -> Void?){
         print(#fileID, #function, #line, "-  \(id) ")
         
         let urlString: String = "https://phplaravel-574671-2962113.cloudwaysapps.com/api/v1/todos/\(id)"
         
-            print(#fileID, #function, #line, "- urlString\(urlString)")
+        print(#fileID, #function, #line, "- urlString\(urlString)")
         
         guard let url = URL(string: urlString) else { return }
         
@@ -625,7 +769,7 @@ class ViewController: UIViewController {
         
         // HTTP 요청
         var urlReuqest = URLRequest(url: url)
-        urlReuqest.httpMethod = "PUT"
+        urlReuqest.httpMethod = "POST"
         urlReuqest.setValue("application/json", forHTTPHeaderField: "Content-Type")
         urlReuqest.httpBody = jsonData
         
@@ -643,12 +787,12 @@ class ViewController: UIViewController {
             //                    print(#fileID, #function, #line, "- \(jsonString)")
             //            }
             
-
+            
             guard let httpResponse = response as? HTTPURLResponse,
                   httpResponse.statusCode == 200 else {
                 let httpResponse = response as? HTTPURLResponse
                 
-                    print(#fileID, #function, #line, "- 할일 목록 수정 실패(응답코드: \(httpResponse?.statusCode)")
+                print(#fileID, #function, #line, "- 할일 목록 수정 실패(응답코드: \(httpResponse?.statusCode)")
                 return
             }
             
@@ -700,8 +844,14 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, Sen
             
             let deleteAction = SwipeAction(style: .destructive, title: "삭제") { action, indexPath in
                 
+                // 휴지통에 넣기
+                self.deleteToDoList.append(self.findItem(indexPath: indexPath)!)
+                
+                print(#fileID, #function, #line, "- deleteToDoList \(self.deleteToDoList)")
                 
                 if let deleteID = self.findItem(indexPath: indexPath)?.id {
+                    
+                    
                     
                     self.deleteMethod(deleteID, completion: { [weak self] in
                         
@@ -712,38 +862,38 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, Sen
                         DispatchQueue.main.async {
                             
                             tableView.deleteRows(at: [indexPath], with: .fade)
-//                            let sectionString = self.sectionDates[indexPath.section]
-//                            if self.groupingToDoList[sectionString]?.count ?? 0 < 1 {
-//
-//                                let indexSet = IndexSet(integer: indexPath.section)
-//                                tableView.deleteSections(indexSet, with: .fade)
-//                            }
+                            //                            let sectionString = self.sectionDates[indexPath.section]
+                            //                            if self.groupingToDoList[sectionString]?.count ?? 0 < 1 {
+                            //
+                            //                                let indexSet = IndexSet(integer: indexPath.section)
+                            //                                tableView.deleteSections(indexSet, with: .fade)
+                            //                            }
                         }
                     })
                 }
                 
-//                if let deleteID = self.toDoList[indexPath.row].id {
-//
-//                    print(#fileID, #function, #line, "- \(self.toDoList.self)")
-//                    print(#fileID, #function, #line, "- \(deleteID)")
-//
-//
-//                    self.deleteMethod(deleteID, completion: { [weak self] in
-//
-//                        guard let self = self else { return }
-//
-//                        let sectionString = self.sectionDates[indexPath.section]
-//
-//                        self.groupingToDoList[sectionString]?.remove(at: indexPath.row)
-//                        DispatchQueue.main.async {
-//                            tableView.deleteRows(at: [indexPath], with: .fade)
-//                        }
-//                    })
-//
-//                    print(#fileID, #function, #line, "- \(self.toDoList.count)")
-////                    self.reCallGetTodo()
-//
-//                }
+                //                if let deleteID = self.toDoList[indexPath.row].id {
+                //
+                //                    print(#fileID, #function, #line, "- \(self.toDoList.self)")
+                //                    print(#fileID, #function, #line, "- \(deleteID)")
+                //
+                //
+                //                    self.deleteMethod(deleteID, completion: { [weak self] in
+                //
+                //                        guard let self = self else { return }
+                //
+                //                        let sectionString = self.sectionDates[indexPath.section]
+                //
+                //                        self.groupingToDoList[sectionString]?.remove(at: indexPath.row)
+                //                        DispatchQueue.main.async {
+                //                            tableView.deleteRows(at: [indexPath], with: .fade)
+                //                        }
+                //                    })
+                //
+                //                    print(#fileID, #function, #line, "- \(self.toDoList.count)")
+                ////                    self.reCallGetTodo()
+                //
+                //                }
             }
             
             return [deleteAction]
@@ -769,7 +919,6 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, Sen
                     self.id = selectData?.id ?? 0
                     self.testIsDone = ((selectData?.isDone) != nil)
                     self.toDotitle = selectData?.title ?? ""
-                    
                 }
                 
                 
@@ -778,18 +927,11 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, Sen
                 
                 
             }
-            
             editAction.backgroundColor = .systemGreen
-            
             return [editAction]
-            
         }
-        
         return nil
-        
     }
-    
-    
     
     // 섹션 폰트
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
@@ -815,14 +957,14 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, Sen
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-//        let sectionString: String = sectionDates[section]
-//
-//        // 섹션에 있는 날짜별로 행 반환
-//        return groupingToDoList[sectionString]?.count ?? 0
+        //        let sectionString: String = sectionDates[section]
+        //
+        //        // 섹션에 있는 날짜별로 행 반환
+        //        return groupingToDoList[sectionString]?.count ?? 0
         return getRows(section: section).count
     }
     
-  
+    
     
     
     
@@ -856,7 +998,7 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, Sen
         guard let cell = tableView.cellForRow(at: indexPath) as? ToDoCell
         else { return }
         
-     
+        
         cell.indexPath = indexPath
         cell.selectionStyle = .none
         
@@ -881,7 +1023,7 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, Sen
         
     }
     
-
+    
 }
 
 extension ViewController: UITableViewDelegate {
@@ -913,7 +1055,7 @@ extension ViewController: UITableViewDelegate {
 
 extension ViewController {
     
-        
+    
     
     private func findIndexPath(dataItem: Post) -> IndexPath {
         
@@ -930,7 +1072,7 @@ extension ViewController {
     }
     
     private func findItem(indexPath: IndexPath) -> Post? {
-            
+        
         let sectionString: String = sectionDates[indexPath.section]
         
         // 섹션에 있는 날짜별로 행 반환
@@ -963,7 +1105,7 @@ extension ViewController {
         
         groupingToDoList[sectionString]?.remove(at: rowIndex)
         
-    
+        
         
     }
 }
@@ -981,12 +1123,12 @@ extension ViewController {
     
     
     fileprivate func makeTodoCell(tableView: UITableView,
-                              indexPath: IndexPath) -> UITableViewCell {
+                                  indexPath: IndexPath) -> UITableViewCell {
         
         guard let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoCell", for: indexPath) as? ToDoCell else {
             return UITableViewCell()
         }
-            
+        
         print(#fileID, #function, #line, "- <# 주석 #>")
         
         //            if cell.label != nil {
@@ -1018,10 +1160,6 @@ extension ViewController {
             
             cell.idLabel.text = "ID: \(post.id ?? 0)"
             
-            
-            
-            
-            
             // 제목 표시
             if let title = post.title {
                 cell.label?.text = title
@@ -1052,8 +1190,6 @@ extension ViewController {
                 cell.label?.attributedText = attributedString
                 
             }
-        
-
             
             // 날짜 표시
             var time: String = ""
