@@ -14,14 +14,17 @@ enum MyError: Error {
     case noData
     case notAllowedUrl
     case stringCountError(text: String)
+    case nonSearchData
     //
     var errInfo : String {
         switch self {
         case .noData:                   return "데이터가 없습니다"
         case .notAllowedUrl:            return "허용되지 않는 URL 입니다"
         case .serverError(let code):    return "서버에러 입니다 : code : \(code)"
-        case.stringCountError(let text):
+        case .stringCountError(let text):
             return "문자열의 길이는 최소 6자 이상입니다. 입력된 문자열의 길이: \(text.count)"
+        case .nonSearchData:
+            return "검색결과가 없습니다."
         case .unknownError(let err):
             let nsError = err as? NSError
             return "알 수 없는 에러 : \(nsError?.code ?? 999)"
@@ -142,6 +145,8 @@ class ViewController: UIViewController {
         case .notAllowedUrl:
             print(#fileID, #function, #line, "- ")
         case .stringCountError(let text):
+                print(#fileID, #function, #line, "- ")
+        case .nonSearchData:
                 print(#fileID, #function, #line, "- ")
         }
     }
@@ -561,7 +566,11 @@ class ViewController: UIViewController {
         
         let urlString: String = "https://phplaravel-574671-2962113.cloudwaysapps.com/api/v1/todos/search?query=\(query)&order_by=desc&page=1&per_page=10"
         
-        guard let url = URL(string: urlString) else { return     print(#fileID, #function, #line, "- Url 오류! ")}
+        guard let url = URL(string: urlString) else {
+            let error = MyError.notAllowedUrl
+            Utils.shared.showErrAlert(parentVC: self, error)
+            return
+        }
         
         print(#fileID, #function, #line, "- \(url)")
         
@@ -593,7 +602,9 @@ class ViewController: UIViewController {
                 
                 
             } catch {
-                print(#fileID, #function, #line, "- \(error)")
+                let nonSearchError = MyError.nonSearchData
+                Utils.shared.showErrAlert(parentVC: self, nonSearchError)
+                return
             }
             
             
