@@ -10,6 +10,8 @@ import UIKit
 
 class AddVC: UIViewController {
     
+
+    
     var toDoList: [Post] = []
     
     var text: String = ""
@@ -51,8 +53,17 @@ class AddVC: UIViewController {
     }
     
     @IBAction func finishBtnCLicked(_ sender: UIButton) {
-        
-        guard !(toDoTF.text?.isEmpty ?? false), toDoTF.text?.count ?? 0 > 5 else { return }
+      
+         
+    
+        // 422 에러 메시지 받기
+        guard !(toDoTF.text?.isEmpty ?? false), toDoTF.text?.count ?? 0 > 5 else {    let error = MyError.stringCountError(text: toDoTF.text ?? "")
+            print(error.errInfo)
+//            fatalError(error.errInfo)
+            Utils.shared.showErrAlert(parentVC: self, error)
+            return
+
+        }
         
         text = toDoTF.text!
         
@@ -71,11 +82,15 @@ class AddVC: UIViewController {
         
         
         
-        closureSecond = { [weak self] in guard let self = self else { return }
+        closureSecond = { [weak self] in
+            guard let self = self else { return }
             print(#fileID, #function, #line, "- 클로저가 실행되었따 ")
+            
             self.callAddToDoListAPI(self.text, self.finishBool) {
                 
             }
+                
+            
         }
         
         closureSecond?()
@@ -102,7 +117,7 @@ class AddVC: UIViewController {
         
         print(#fileID, #function, #line, "\(title), \(is_done) ")
         
-        
+    
         let urlString: String = "https://phplaravel-574671-2962113.cloudwaysapps.com/api/v1/todos-json"
         
         guard let url = URL(string: urlString) else { return }
