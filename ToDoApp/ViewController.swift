@@ -340,10 +340,11 @@ class ViewController: UIViewController {
     // MARK: - unwindSegue
     
     
-    @IBAction func trashBtnClicked(_ sender: Any) {
+    @IBAction func trashBtnClicked(_ sender: UIButton) {
         print(#fileID, #function, #line, "- <# 주석 #>")
         self.performSegue(withIdentifier: "NavToTrashVC", sender: self)
     }
+    
     
     @IBAction func backToVC(unwindSegue: UIStoryboardSegue) {
         print(#fileID, #function, #line, "- unwind")
@@ -613,7 +614,7 @@ class ViewController: UIViewController {
         
     }
     
-    fileprivate func deleteMethod(_ deleteID: Int, completion: @escaping () -> Void) {
+    fileprivate func deleteMethod(_ deleteID: Int, completion: @escaping () -> Void, errorCompletion: @escaping (MyError?) -> Void) {
         print(#fileID, #function, #line, "-  주석 ")
         
         let urlString: String = "https://phplaravel-574671-2962113.cloudwaysapps.com/api/v1/todos/\(deleteID)"
@@ -634,8 +635,22 @@ class ViewController: UIViewController {
                 print(#fileID, #function, #line, "포스트\(todoResponse) ")
                 completion()
             } catch {
-                print(#fileID, #function, #line, "- \(error)")
+                print(#fileID, #function, #line, "- \(error.localizedDescription)")
+                errorCompletion(MyError.noData)
             }
+            
+            let errorResponse = response as? HTTPURLResponse
+               
+            guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200
+            else { print(errorResponse?.statusCode ?? 404)
+                let error = MyError.noData
+                Utils.shared.showErrAlert(parentVC: self, error)
+                return
+                
+             
+                
+            }
+            
         }.resume()
         
     }
@@ -884,8 +899,8 @@ extension ViewController: UITableViewDataSource, SwipeTableViewCellDelegate, Sen
                             //                                tableView.deleteSections(indexSet, with: .fade)
                             //                            }
                         }
-                    })
-                }
+                    }, errorCompletion: {_ in }
+                                      )}
                 
                 //                if let deleteID = self.toDoList[indexPath.row].id {
                 //
